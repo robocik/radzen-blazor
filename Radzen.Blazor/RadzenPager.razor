@@ -1,58 +1,88 @@
 ﻿@inherits RadzenComponent
 @if (Visible && Count > PageSize)
 {
-    <div @ref="@Element" @attributes="Attributes" class="@GetCssClass()" style="@Style" id="@GetId()">
+<nav aria-label="Pager">
+    <ul @ref="@Element" @attributes="Attributes" class="pagination" style="@Style" id="@GetId()">
         @if (skip > 0)
+    {
+        <li class="page-item ">
+            <a class="page-link" href="javascript:void(0)" tabindex="-1" @onclick="@(() => FirstPage())">
+                <i class="fas fa-step-backward"></i>
+            </a>
+        </li>
+        <li class="page-item ">
+            <a class="page-link" href="javascript:void(0)" tabindex="-1" @onclick="@(() => PrevPage())">
+                <i class="fas fa-caret-left"></i>
+            </a>
+        </li>
+
+
+    }
+    else
+    {
+        <li class="page-item disabled">
+            <a class="page-link" page-link href="javascript:void(0)" tabindex="-1" @onclick="@(() => FirstPage())">
+                <i class="fas fa-step-backward"></i>
+            </a>
+        </li>
+        <li class="page-item disabled">
+            <a class="page-link" href="javascript:void(0)" tabindex="-1" @onclick="@(() => PrevPage())">
+                <i class="fas fa-caret-left"></i>
+            </a>
+        </li>
+
+
+    }
+
+        @foreach (var i in Enumerable.Range(startPage, Math.Min(endPage + 1, PageNumbersCount)))
+    {
+        @if (i == CurrentPage)
         {
-            <a class="rz-paginator-first rz-paginator-element" href="javascript:void(0)" tabindex="-1" @onclick="@(() => FirstPage())">
-                <span class="rz-paginator-icon rzi rzi-step-backward"></span>
-            </a>
-            <a class="rz-paginator-prev rz-paginator-element" href="javascript:void(0)" tabindex="-1" @onclick="@(() => PrevPage())">
-                <span class="rz-paginator-icon rzi rzi-caret-left"></span>
-            </a>
+        <li class="page-item active" aria-current="page">
+            <a class="page-link" href="javascript:void(0)" @onclick="@(() => GoToPage(i))">@(i + 1)</a>
+        </li>
+
         }
         else
         {
-            <a class="rz-paginator-first rz-paginator-element rz-state-disabled" href="javascript:void(0)" tabindex="-1" @onclick="@(() => FirstPage())">
-                <span class="rz-paginator-icon rzi rzi-step-backward"></span>
-            </a>
-            <a class="rz-paginator-prev rz-paginator-element   rz-state-disabled" href="javascript:void(0)" tabindex="-1" @onclick="@(() => PrevPage())">
-                <span class="rz-paginator-icon rzi rzi-caret-left"></span>
-            </a>
+        @*<a class="rz-paginator-page rz-paginator-element" href="javascript:void(0)" @onclick="@(() => GoToPage(i))">@(i + 1)</a>*@
+        <li class="page-item" aria-current="page">
+            <a class="page-link" href="javascript:void(0)" @onclick="@(() => GoToPage(i))">@(i + 1)</a>
+        </li>
         }
-        <span class="rz-paginator-pages">
-            @foreach (var i in Enumerable.Range(startPage, Math.Min(endPage + 1, PageNumbersCount)))
-            {
-                @if (i == CurrentPage)
-                {
-                    <a class="rz-paginator-page rz-paginator-element rz-state-active" href="javascript:void(0)" @onclick="@(() => GoToPage(i))">@(i + 1)</a>
-                }
-                else
-                {
-                    <a class="rz-paginator-page rz-paginator-element" href="javascript:void(0)" @onclick="@(() => GoToPage(i))">@(i + 1)</a>
-                }
-            }
-        </span>
+    }
+
         @if (CurrentPage != numberOfPages - 1)
-        {
-            <a class="rz-paginator-next rz-paginator-element" href="javascript:void(0)" tabindex="0" @onclick="@(() => NextPage())">
-                <span class="rz-paginator-icon rzi rzi-caret-right"></span>
+    {
+        <li class="page-item">
+            <a class=" page-link" href="javascript:void(0)" tabindex="0" @onclick="@(() => NextPage())">
+                <i class="fas fa-caret-right"></i>
             </a>
-            <a class="rz-paginator-last rz-paginator-element" href="javascript:void(0)" tabindex="0" @onclick="@(() => LastPage())">
-                <span class="rz-paginator-icon rzi rzi-step-forward"></span>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="javascript:void(0)" tabindex="0" @onclick="@(() => LastPage())">
+                <i class="fas fa-step-forward"></i>
             </a>
-        }
-        else
-        {
-            <a class="rz-paginator-next rz-paginator-element rz-state-disabled" href="javascript:void(0)" tabindex="0" @onclick="@(() => NextPage())">
-                <span class="rz-paginator-icon rzi rzi-caret-right"></span>
+        </li>
+    }
+    else
+    {
+        <li class="page-item disabled">
+            <a class="page-link" href="javascript:void(0)" tabindex="0" @onclick="@(() => NextPage())">
+                <i class="fas fa-caret-right"></i>
             </a>
-            <a class="rz-paginator-last rz-paginator-element rz-state-disabled" href="javascript:void(0)" tabindex="0" @onclick="@(() => LastPage())">
-                <span class="rz-paginator-icon rzi rzi-step-forward"></span>
+        </li>
+        <li class="page-item disabled">
+            <a class="page-link" href="javascript:void(0)" tabindex="0" @onclick="@(() => LastPage())">
+                <i class="fas fa-step-forward"></i>
             </a>
-        }
-    </div>
-}
+        </li>
+
+
+    }
+    </ul>
+</nav>
+    }
 @code {
     protected override string GetComponentCssClass()
     {

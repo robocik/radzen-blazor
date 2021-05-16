@@ -42,7 +42,7 @@
                     <tr class="">
                         @if (Template != null)
                         {
-                            <th style="border-bottom-color: currentColor;" class="rz-col-icon  rz-unselectable-text" scope="col">
+                            <th class="rz-col-icon  rz-unselectable-text" scope="col">
                                 <span class="rz-column-title"></span>
                             </th>
                         }
@@ -50,7 +50,7 @@
                         @foreach (var column in visibleColumns)
                         {
                             var sortableClass = AllowSorting && column.Sortable ? "rz-sortable-column" : "";
-                    <th style="border-bottom-color: currentColor; @column.GetStyle(true)" class="@($" rz-unselectable-text {sortableClass} {column.HeaderCssClass}")" scope="col">
+                    <th style="@column.GetStyle(true)" class="@($" rz-unselectable-text {sortableClass} {column.HeaderCssClass}")" scope="col">
                         <div @onclick='@((args) => OnSort(args, column))' style="width:100%">
                             <span class="rz-column-title">
                                 @if (column.HeaderTemplate != null)
@@ -238,7 +238,6 @@
                         </tr>
                     }
                     </thead>
-                    <tbody></tbody>
                     </table>
                 </div>
             </div>
