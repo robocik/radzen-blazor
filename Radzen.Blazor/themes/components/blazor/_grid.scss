@@ -612,7 +612,7 @@ $grid-button-line-height: $grid-button-height !default;
   right: 0;
   bottom: 0;
   background-color: $grid-loading-indicator-background-color;
-  z-index: 1;
+  z-index: 2;
 }
 
 .rz-datatable-loading-content {
@@ -796,4 +796,21 @@ $grid-button-line-height: $grid-button-height !default;
 
 .rz-column-draggable {
     background-color: $grid-header-background-color;
+}
+.rz-group-header {
+    background-color: $grid-header-background-color;
+    padding: 15px;
+    border-bottom: $grid-cell-border;
+}
+
+.rz-group-header-item {
+    border: $grid-cell-border;
+    padding: 10px;
+    margin:5px;
+    width: fit-content;
+    float:left;
+}
+
+.rz-group-header-item-title {
+    margin-right: 5px;
 }

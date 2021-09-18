@@ -1,32 +1,18 @@
 ﻿@inherits RadzenComponent
 @using System.Linq
-@using Microsoft.JSInterop
+
 <CascadingValue Value=this>
 @if (Visible)
 {
     <div @ref=@Element style=@Style @attributes=@Attributes class=@GetCssClass() id=@GetId()>
-        <ul role="tablist" class="nav nav-tabs">
+        <ul role="tablist" class="rz-tabview-nav">
             @Tabs
         </ul>
         <div class="rz-tabview-panels">
-            @if(RenderMode == TabRenderMode.Client)
+            @if (SelectedTab?.Visible == true)
             {
-                for (var i = 0; i < tabs.Count; i++)
-                {
-                <div class="rz-tabview-panel" role="tabpanel" id="@($"{Id}-tabpanel-{i}")" style="@(tabs[i] == SelectedTab ? "" : "display:none")" aria-hidden="@(tabs[i] == SelectedTab ? "false" : "true")" aria-labelledby="@($"{Id}-tabpanel-{i}-label")">
-                    @tabs[i].ChildContent
-                </div>                            
-                }
-            }
-            else
-            {
-                <div class="tab-content">
-                    @if (SelectedTab?.Visible == true)
-                    {
-                        <div class="rz-tabview-panel tab-pane active @BodyCss" role="tabpanel" id="@($"{Id}-tabpanel-{selectedIndex}")" aria-hidden="false" aria-labelledby="@($"{Id}-tabpanel-{selectedIndex}-label")">
-                            @SelectedTab.ChildContent
-                        </div>
-                    }
+                <div class="rz-tabview-panel" role="tabpanel" id="@($"{Id}-tabpanel-{selectedIndex}")" aria-hidden="false" aria-labelledby="@($"{Id}-tabpanel-{selectedIndex}-label")">
+                    @SelectedTab.ChildContent
                 </div>
             }
         </div>
@@ -36,13 +22,7 @@
 
 @code {
     [Parameter]
-    public TabRenderMode RenderMode { get; set; } = TabRenderMode.Server;
-
-    [Parameter]
     public int SelectedIndex { get; set; } = -1;
-
-    [Parameter]
-    public string BodyCss { get; set; }
 
     private int selectedIndex = -1;
 
@@ -143,7 +123,7 @@
 
     protected override string GetComponentCssClass()
     {
-        return "";
+        return "rz-tabview";
     }
 
     protected override void OnInitialized()
@@ -161,27 +141,5 @@
         }
 
         await base.SetParametersAsync(parameters);
-    }
-
-    bool shouldRender = true;
-    protected override bool ShouldRender()
-    {
-        return shouldRender;
-    }
-
-    internal async System.Threading.Tasks.Task SelectTabOnClient(RadzenTabsItem tab)
-    { 
-        var index = IndexOf(tab);
-        if (index != selectedIndex)
-        {
-            selectedIndex = index;
-
-            await JSRuntime.InvokeVoidAsync("Radzen.selectTab", $"{GetId()}-tabpanel-{selectedIndex}", selectedIndex);
-
-            shouldRender = false;
-            await Change.InvokeAsync(selectedIndex);
-            await SelectedIndexChanged.InvokeAsync(selectedIndex);
-            shouldRender = true;
-        }
     }
 }

@@ -52,6 +52,9 @@
     public string SortProperty { get; set; }
 
     [Parameter]
+    public string GroupProperty { get; set; }
+
+    [Parameter]
     public string FilterProperty { get; set; }
 
     [Parameter]
@@ -89,6 +92,9 @@
 
     [Parameter]
     public bool Reorderable { get; set; } = true;
+
+    [Parameter]
+    public bool Groupable { get; set; } = true;
 
     [Parameter]
     public TextAlign TextAlign { get; set; } = TextAlign.Left;
@@ -216,6 +222,18 @@
         SortOrder = null;
     }
 
+    public string GetGroupProperty()
+    {
+        if (!string.IsNullOrEmpty(GroupProperty))
+        {
+            return GroupProperty;
+        }
+        else
+        {
+            return Property;
+        }
+    }
+
     public string GetFilterProperty()
     {
         if (!string.IsNullOrEmpty(FilterProperty))
@@ -258,7 +276,7 @@
 
         if (parameters.DidParameterChange(nameof(SortOrder), SortOrder))
         {
-            sortOrder = new SortOrder?[] { parameters.GetValueOrDefault<SortOrder>(nameof(SortOrder)) };
+            sortOrder = new SortOrder?[] { parameters.GetValueOrDefault<SortOrder?>(nameof(SortOrder)) };
         }
 
         if (parameters.DidParameterChange(nameof(FilterValue), FilterValue))

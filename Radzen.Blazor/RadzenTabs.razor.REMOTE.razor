@@ -5,7 +5,7 @@
 @if (Visible)
 {
     <div @ref=@Element style=@Style @attributes=@Attributes class=@GetCssClass() id=@GetId()>
-        <ul role="tablist" class="nav nav-tabs">
+        <ul role="tablist" class="rz-tabview-nav">
             @Tabs
         </ul>
         <div class="rz-tabview-panels">
@@ -20,14 +20,12 @@
             }
             else
             {
-                <div class="tab-content">
-                    @if (SelectedTab?.Visible == true)
-                    {
-                        <div class="rz-tabview-panel tab-pane active @BodyCss" role="tabpanel" id="@($"{Id}-tabpanel-{selectedIndex}")" aria-hidden="false" aria-labelledby="@($"{Id}-tabpanel-{selectedIndex}-label")">
-                            @SelectedTab.ChildContent
-                        </div>
-                    }
-                </div>
+                @if (SelectedTab?.Visible == true)
+                {
+                    <div class="rz-tabview-panel" role="tabpanel" id="@($"{Id}-tabpanel-{selectedIndex}")" aria-hidden="false" aria-labelledby="@($"{Id}-tabpanel-{selectedIndex}-label")">
+                        @SelectedTab.ChildContent
+                    </div>
+                }
             }
         </div>
     </div>
@@ -40,9 +38,6 @@
 
     [Parameter]
     public int SelectedIndex { get; set; } = -1;
-
-    [Parameter]
-    public string BodyCss { get; set; }
 
     private int selectedIndex = -1;
 
@@ -143,7 +138,7 @@
 
     protected override string GetComponentCssClass()
     {
-        return "";
+        return "rz-tabview";
     }
 
     protected override void OnInitialized()
