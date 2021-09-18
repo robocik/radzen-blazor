@@ -92,24 +92,25 @@ namespace Radzen
                 ShowClose = options != null ? options.ShowClose : true,
                 ChildContent = options?.ChildContent,
                 Style = options != null ? options.Style : "",
+                AutoFocusFirstElement = options != null ? options.AutoFocusFirstElement : true
             });
         }
 
         public void Close(dynamic result = null)
         {
-            OnClose?.Invoke(result);
-
             var dialog = dialogs.LastOrDefault();
+
             if (dialog != null)
             {
+                OnClose?.Invoke(result);
                 dialogs.Remove(dialog);
             }
 
             var task = tasks.LastOrDefault();
             if (task != null && task.Task != null && !task.Task.IsCompleted)
             {
-                task.SetResult(result);
                 tasks.Remove(task);
+                task.SetResult(result);
             }
         }
 
@@ -123,15 +124,14 @@ namespace Radzen
             {
                 var i = 0;
                 b.OpenElement(i++, "div");
+                b.AddAttribute(i++, "class", "modal-body");
                 b.OpenElement(i++, "p");
                 b.AddAttribute(i++, "style", "margin-bottom: 20px;");
                 b.AddContent(i++, message);
                 b.CloseElement();
 
                 b.OpenElement(i++, "div");
-                b.AddAttribute(i++, "class", "row");
-                b.OpenElement(i++, "div");
-                b.AddAttribute(i++, "class", "col-md-12");
+                b.AddAttribute(i++, "class", "modal-footer");
 
                 b.OpenComponent<Blazor.RadzenButton>(i++);
                 b.AddAttribute(i++, "Text", options != null ? options.OkButtonText : "Ok");
@@ -145,15 +145,13 @@ namespace Radzen
                 b.AddAttribute(i++, "Style", "margin-bottom: 10px; margin-left: 10px; width: 150px");
                 b.AddAttribute(i++, "Click", EventCallback.Factory.Create<Microsoft.AspNetCore.Components.Web.MouseEventArgs>(this, () => ds.Close(false)));
                 b.CloseComponent();
-                
-                b.CloseElement();
+
                 b.CloseElement();
                 b.CloseElement();
             };
             return content;
-        }, new DialogOptions() 
+        }, new DialogOptions()
         {
-            Width = options != null ? !string.IsNullOrEmpty(options.Width) ? options.Width : "355px" : "355px",
             Height = options != null ? options.Height : null,
             Left = options != null ? options.Left : null,
             Top = options != null ? options.Top : null,
@@ -176,6 +174,7 @@ namespace Radzen
         public string Height { get; set; }
         public string Style { get; set; }
         public RenderFragment<DialogService> ChildContent { get; set; }
+        public bool AutoFocusFirstElement { get; set; } = true;
     }
 
     public class ConfirmOptions : DialogOptions

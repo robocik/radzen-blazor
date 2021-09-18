@@ -1,7 +1,7 @@
 ﻿@if (Visible)
 {
- <li role="presentation" class=@Class @attributes=@Attributes style=@Style>
-    <a @onclick=@OnClick role="tab" href="javascript: void(0)" id="@($"{Tabs.Id}-tabpanel-{Index}-label")" aria-selected=@(IsSelected? "true" : "false")  aria-controls="@($"{Tabs.Id}-tabpanel-{Index}")">
+ <li role="presentation" class="nav-item" @attributes=@Attributes style=@Style>
+    <a @onclick=@OnClick class=@Class role="tab" href="javascript: void(0)" id="@($"{Tabs.Id}-tabpanel-{Index}-label")" aria-selected=@(IsSelected? "true" : "false")  aria-controls="@($"{Tabs.Id}-tabpanel-{Index}")">
         @if (!string.IsNullOrEmpty(Icon))
         {
             <span class="rz-tabview-left-icon rzi">@((MarkupString)Icon)</span>
@@ -12,7 +12,7 @@
         }
         else
         {
-        <span class="rz-tabview-title">@Text</span>
+        <span class="">@Text</span>
         }
     </a>
 </li>
@@ -47,16 +47,16 @@
     {
         get
         {
-            var classList = new List<string> { "", "rz-state-active" };
+            var classList = new List<string> { "nav-link" };
 
             if (IsSelected)
             {
-                classList.Add("rz-tabview-selected");
+                classList.Add("active");
             }
 
             if (Disabled)
             {
-                classList.Add("rz-state-disabled");
+                classList.Add("disabled");
             }
 
             return string.Join(" ", classList);

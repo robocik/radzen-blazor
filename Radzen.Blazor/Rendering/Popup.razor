@@ -44,6 +44,9 @@
     {
         base.Dispose();
 
-        JSRuntime.InvokeVoidAsync("Radzen.destroyPopup", GetId());
+        if (IsJSRuntimeAvailable)
+        {
+            JSRuntime.InvokeVoidAsync("Radzen.destroyPopup", GetId());
+        }
     }
 }

@@ -245,17 +245,27 @@
 
     RenderFragment tooltip;
     object tooltipData;
+    double mouseX;
+    double mouseY;
 
     [JSInvokable]
     public void MouseMove(double x, double y)
+    {
+        mouseX = x;
+        mouseY = y;
+
+        DisplayTooltip();
+    }
+
+    internal void DisplayTooltip()
     {
         if (Tooltip.Visible)
         {
             foreach (var series in Series)
             {
-                if (series.Visible && series.Contains(x - MarginLeft, y - MarginTop))
+                if (series.Visible && series.Contains(mouseX - MarginLeft, mouseY - MarginTop))
                 {
-                    var data = series.DataAt(x - MarginLeft, y - MarginTop);
+                    var data = series.DataAt(mouseX - MarginLeft, mouseY - MarginTop);
 
                     if (data != tooltipData)
                     {
@@ -301,6 +311,8 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        await base.OnAfterRenderAsync(firstRender);
+
         this.firstRender = firstRender;
 
         if (firstRender || visibleChanged)
@@ -417,7 +429,7 @@
     {
         base.Dispose();
 
-        if (Visible)
+        if (Visible && IsJSRuntimeAvailable)
         {
             JSRuntime.InvokeVoidAsync("Radzen.destroyChart", Element);
         }

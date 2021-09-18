@@ -5,67 +5,105 @@
 
 @inject NorthwindContext dbContext
 
-<h1>DataGrid</h1>
+<h1>DataGrid <strong>LoadData</strong></h1>
 
-<p>This page demonstrates how to data-bind the Radzen Blazor DataGrid to custom collection via the LoadData event.</p>
+<p>The <code>LoadData</code> event allows you to perform custom paging, sorting and filtering.</p>
 
 <RadzenExample Name="DataGridLoadData" Heading="false" Documentation="false">
-    <RadzenGrid Count="@count" Data="@employees" LoadData="@LoadData" AllowSorting="true" AllowFiltering="true" AllowPaging="true" PageSize="4" TItem="Employee" ColumnWidth="200px">
+    <RadzenButton Text="Reset" Click="@Reset" Style="margin-bottom: 20px;" />
+    <RadzenDataGrid @ref="grid" Count="@count" Data="@employees" LoadData="@LoadData" AllowSorting="true" AllowFiltering="true" AllowPaging="true" PageSize="4" TItem="Employee" ColumnWidth="200px">
         <Columns>
-            <RadzenGridColumn TItem="Employee" Property="EmployeeID" Title="Employee ID" />
-            <RadzenGridColumn TItem="Employee" Property="Photo" Title="Photo" Sortable="false" Filterable="false">
+            <RadzenDataGridColumn TItem="Employee" Property="EmployeeID" Filterable="false" Title="ID" Frozen="true" Width="50px" TextAlign="TextAlign.Center" />
+            <RadzenDataGridColumn TItem="Employee" Title="Photo" Sortable="false" Filterable="false" Width="200px" >
                 <Template Context="data">
-                    <RadzenImage Path="@data?.Photo" />
+                    <RadzenImage Path="@data.Photo" style="width: 40px; height: 40px; border-radius: 8px;" />
                 </Template>
-            </RadzenGridColumn>
-            <RadzenGridColumn TItem="Employee" Property="LastName" Title="Last Name" />
-            <RadzenGridColumn TItem="Employee" Property="FirstName" Title="First Name" />
-            <RadzenGridColumn TItem="Employee" Property="Title" Title="Title" />
-            <RadzenGridColumn TItem="Employee" Property="TitleOfCourtesy" Title="Title Of Courtesy" />
-            <RadzenGridColumn TItem="Employee" Property="BirthDate" Title="Birth Date">
-                <Template Context="data">
-                    @String.Format("{0:d}", data.BirthDate)
-                </Template>
-            </RadzenGridColumn>
-            <RadzenGridColumn TItem="Employee" Property="HireDate" Title="Hire Date">
-                <Template Context="data">
-                    @String.Format("{0:d}", data.HireDate)
-                </Template>
-            </RadzenGridColumn>
-            <RadzenGridColumn TItem="Employee" Property="Address" Title="Address" />
-            <RadzenGridColumn TItem="Employee" Property="City" Title="City" />
-            <RadzenGridColumn TItem="Employee" Property="Region" Title="Region" />
-            <RadzenGridColumn TItem="Employee" Property="PostalCode" Title="Postal Code" />
-            <RadzenGridColumn TItem="Employee" Property="Country" Title="Country" />
-            <RadzenGridColumn TItem="Employee" Property="HomePhone" Title="Home Phone" />
-            <RadzenGridColumn TItem="Employee" Property="Extension" Title="Extension" />
-            <RadzenGridColumn TItem="Employee" Property="Notes" Title="Notes" />
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="Employee" Property="FirstName" Title="First Name" />
+            <RadzenDataGridColumn TItem="Employee" Property="LastName" Title="Last Name" Width="150px"/>
+            <RadzenDataGridColumn TItem="Employee" Property="Title" Title="Title" />
+            <RadzenDataGridColumn TItem="Employee" Property="TitleOfCourtesy" Title="Title Of Courtesy" />
+            <RadzenDataGridColumn TItem="Employee" Property="BirthDate" Title="Birth Date" FormatString="{0:d}" />
+            <RadzenDataGridColumn TItem="Employee" Property="HireDate" Title="Hire Date" FormatString="{0:d}" />
+            <RadzenDataGridColumn TItem="Employee" Property="Address" Title="Address" />
+            <RadzenDataGridColumn TItem="Employee" Property="City" Title="City" />
+            <RadzenDataGridColumn TItem="Employee" Property="Region" Title="Region" />
+            <RadzenDataGridColumn TItem="Employee" Property="PostalCode" Title="Postal Code" />
+            <RadzenDataGridColumn TItem="Employee" Property="Country" Title="Country" />
+            <RadzenDataGridColumn TItem="Employee" Property="HomePhone" Title="Home Phone" />
+            <RadzenDataGridColumn TItem="Employee" Property="Extension" Title="Extension" />
+            <RadzenDataGridColumn TItem="Employee" Property="Notes" Title="Notes" />
         </Columns>
-    </RadzenGrid>
+    </RadzenDataGrid>
 </RadzenExample>
 
+<h3 style="margin-top: 32px">To perform custom data-binding:</h3>
+<ol>
+    <li>Set the Data and Count properties.
+    <pre>
+        <code>&lt;RadzenDataGrid Count="@@count" Data="@@employees"</code>
+    </pre>
+    </li>
+    <li>
+        Handle the LoadData event and update the Data and Count backing fields (<code>employees</code> and <code>count</code> in this case).
+    <pre>
+        <code>
+void LoadData(LoadDataArgs args)
+{
+    var query = dbContext.Employees.AsQueryable();
+
+    if (!string.IsNullOrEmpty(args.Filter))
+    {
+        query = query.Where(args.Filter);
+    }
+
+    if (!string.IsNullOrEmpty(args.OrderBy))
+    {
+        query = query.OrderBy(args.OrderBy);
+    }
+
+    count = query.Count();
+
+    employees = query.Skip(args.Skip.Value).Take(args.Top.Value).ToList();
+
+   
+} 
+        </code>
+    </pre>
+    </li>
+</ol>
 @code {
+    RadzenDataGrid<Employee> grid;
     int count;
     IEnumerable<Employee> employees;
 
-    async Task LoadData(LoadDataArgs args)
+    async Task Reset()
     {
+        grid.Reset(true); 
+        await grid.FirstPage(true);
+    }
+
+    void LoadData(LoadDataArgs args)
+    {
+        // This demo is using https://dynamic-linq.net
         var query = dbContext.Employees.AsQueryable();
 
         if (!string.IsNullOrEmpty(args.Filter))
         {
+            // Filter via the Where method
             query = query.Where(args.Filter);
         }
 
         if (!string.IsNullOrEmpty(args.OrderBy))
         {
+            // Sort via the OrderBy method
             query = query.OrderBy(args.OrderBy);
         }
 
+        // Important!!! Make sure the Count property of RadzenDataGrid is set.
+        count = query.Count();
+
+        // Perform paginv via Skip and Take.
         employees = query.Skip(args.Skip.Value).Take(args.Top.Value).ToList();
-
-        count = dbContext.Employees.Count();
-
-        await InvokeAsync(StateHasChanged);
     }
 }

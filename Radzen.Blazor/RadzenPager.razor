@@ -1,86 +1,90 @@
 ﻿@inherits RadzenComponent
-@if (Visible && Count > PageSize)
+@if (GetVisible())
 {
-<nav aria-label="Pager">
-    <ul @ref="@Element" @attributes="Attributes" class="pagination" style="@Style" id="@GetId()">
+<nav aria-label="Pager" style="padding:1rem">
+    <ul @ref="@Element" @attributes="Attributes" class="pagination m-0" style="@Style" id="@GetId()">
         @if (skip > 0)
-    {
-        <li class="page-item ">
-            <a class="page-link" href="javascript:void(0)" tabindex="-1" @onclick="@(() => FirstPage())">
-                <i class="fas fa-step-backward"></i>
-            </a>
-        </li>
-        <li class="page-item ">
-            <a class="page-link" href="javascript:void(0)" tabindex="-1" @onclick="@(() => PrevPage())">
-                <i class="fas fa-caret-left"></i>
-            </a>
-        </li>
-
-
-    }
-    else
-    {
-        <li class="page-item disabled">
-            <a class="page-link" page-link href="javascript:void(0)" tabindex="-1" @onclick="@(() => FirstPage())">
-                <i class="fas fa-step-backward"></i>
-            </a>
-        </li>
-        <li class="page-item disabled">
-            <a class="page-link" href="javascript:void(0)" tabindex="-1" @onclick="@(() => PrevPage())">
-                <i class="fas fa-caret-left"></i>
-            </a>
-        </li>
-
-
-    }
-
-        @foreach (var i in Enumerable.Range(startPage, Math.Min(endPage + 1, PageNumbersCount)))
-    {
-        @if (i == CurrentPage)
         {
-        <li class="page-item active" aria-current="page">
-            <a class="page-link" href="javascript:void(0)" @onclick="@(() => GoToPage(i))">@(i + 1)</a>
-        </li>
+            <li class="page-item ">
+                <a class="page-link" href="javascript:void(0)" tabindex="-1" @onclick:preventDefault="true" @onclick="@(() => FirstPage())">
+                    <i class="fas fa-step-backward"></i>
+                </a>
+            </li>
+            <li class="page-item ">
+                <a class="page-link" href="javascript:void(0)" tabindex="-1" @onclick:preventDefault="true" @onclick="@(() => PrevPage())">
+                    <i class="fas fa-caret-left"></i>
+                </a>
+            </li>
+
 
         }
         else
         {
-        @*<a class="rz-paginator-page rz-paginator-element" href="javascript:void(0)" @onclick="@(() => GoToPage(i))">@(i + 1)</a>*@
-        <li class="page-item" aria-current="page">
-            <a class="page-link" href="javascript:void(0)" @onclick="@(() => GoToPage(i))">@(i + 1)</a>
-        </li>
+            <li class="page-item disabled">
+                <a class="page-link" page-link href="javascript:void(0)" tabindex="-1" @onclick:preventDefault="true" @onclick="@(() => FirstPage())">
+                    <i class="fas fa-step-backward"></i>
+                </a>
+            </li>
+            <li class="page-item disabled">
+                <a class="page-link" href="javascript:void(0)" tabindex="-1" @onclick:preventDefault="true" @onclick="@(() => PrevPage())">
+                    <i class="fas fa-caret-left"></i>
+                </a>
+            </li>
+
+
         }
-    }
+
+        @foreach (var i in Enumerable.Range(startPage, Math.Min(endPage + 1, PageNumbersCount)))
+        {
+            @if (i == CurrentPage)
+            {
+                <li class="page-item active" aria-current="page">
+                    <a class="page-link" href="javascript:void(0)" @onclick:preventDefault="true" @onclick="@(() => GoToPage(i))">@(i + 1)</a>
+                </li>
+
+            }
+            else
+            {
+        @*<a class="rz-paginator-page rz-paginator-element" href="javascript:void(0)" @onclick:preventDefault="true" @onclick="@(() => GoToPage(i))">@(i + 1)</a>*@
+                <li class="page-item" aria-current="page">
+                    <a class="page-link" href="javascript:void(0)" @onclick:preventDefault="true" @onclick="@(() => GoToPage(i))">@(i + 1)</a>
+                </li>
+            }
+        }
 
         @if (CurrentPage != numberOfPages - 1)
-    {
-        <li class="page-item">
-            <a class=" page-link" href="javascript:void(0)" tabindex="0" @onclick="@(() => NextPage())">
-                <i class="fas fa-caret-right"></i>
-            </a>
-        </li>
-        <li class="page-item">
-            <a class="page-link" href="javascript:void(0)" tabindex="0" @onclick="@(() => LastPage())">
-                <i class="fas fa-step-forward"></i>
-            </a>
-        </li>
-    }
-    else
-    {
-        <li class="page-item disabled">
-            <a class="page-link" href="javascript:void(0)" tabindex="0" @onclick="@(() => NextPage())">
-                <i class="fas fa-caret-right"></i>
-            </a>
-        </li>
-        <li class="page-item disabled">
-            <a class="page-link" href="javascript:void(0)" tabindex="0" @onclick="@(() => LastPage())">
-                <i class="fas fa-step-forward"></i>
-            </a>
-        </li>
+        {
+            <li class="page-item">
+                <a class=" page-link" href="javascript:void(0)" tabindex="0" @onclick:preventDefault="true" @onclick="@(() => NextPage())">
+                    <i class="fas fa-caret-right"></i>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="javascript:void(0)" tabindex="0" @onclick:preventDefault="true" @onclick="@(() => LastPage())">
+                    <i class="fas fa-step-forward"></i>
+                </a>
+            </li>
+        }
+        else
+        {
+            <li class="page-item disabled">
+                <a class="page-link" href="javascript:void(0)" tabindex="0" @onclick:preventDefault="true" @onclick="@(() => NextPage())">
+                    <i class="fas fa-caret-right"></i>
+                </a>
+            </li>
+            <li class="page-item disabled">
+                <a class="page-link" href="javascript:void(0)" tabindex="0" @onclick:preventDefault="true" @onclick="@(() => LastPage())">
+                    <i class="fas fa-step-forward"></i>
+                </a>
+            </li>
 
 
-    }
+        }
     </ul>
+    @if(PageSizeOptions != null && PageSizeOptions.Any())
+    {
+        <RadzenDropDown TValue="int" Data="@PageSizeOptions" Value="@PageSize" Change="@OnPageSizeChanged" />
+    }
 </nav>
     }
 @code {
@@ -91,6 +95,12 @@
 
     [Parameter]
     public int PageSize { get; set; } = 10;
+
+    [Parameter]
+    public EventCallback<int> PageSizeChanged { get; set; }
+
+    [Parameter]
+    public IEnumerable<int> PageSizeOptions { get; set; }
 
     [Parameter]
     public int PageNumbersCount { get; set; } = 5;
@@ -106,6 +116,11 @@
         }
     }
 
+    protected bool GetVisible()
+    {
+        return Visible && (Count > PageSize || (PageSizeOptions != null && PageSizeOptions.Any()));
+    }
+
     [Parameter]
     public EventCallback<PagerEventArgs> PageChanged { get; set; }
 
@@ -116,12 +131,31 @@
 
     protected override Task OnParametersSetAsync()
     {
-        if (Visible)
+        if (GetVisible())
         {
             InvokeAsync(Reload);
         }
 
         return base.OnParametersSetAsync();
+    }
+
+    protected async Task OnPageSizeChanged(object value)
+    {
+        bool isFirstPage = CurrentPage == 0;
+        bool isLastPage = CurrentPage == numberOfPages - 1;
+        int prevSkip = skip;
+        PageSize = (int)value;
+        await InvokeAsync(Reload);
+        await PageSizeChanged.InvokeAsync((int)value);
+        if (isLastPage)
+        {
+            await LastPage();
+        }
+        else if (!isFirstPage)
+        {
+            int newPage = (int)Math.Floor((decimal)(prevSkip / (PageSize > 0 ? PageSize : 10)));
+            await GoToPage(newPage, true);
+        }
     }
 
     protected int skip;
@@ -159,9 +193,9 @@
         return (int)Math.Floor((decimal)(skip / (PageSize > 0 ? PageSize : 10)));
     }
 
-    public async Task GoToPage(int page)
+    public async Task GoToPage(int page, bool forceReload = false)
     {
-        if (CurrentPage != page)
+        if (CurrentPage != page || forceReload)
         {
             skip = page * PageSize;
             await InvokeAsync(Reload);
@@ -169,7 +203,7 @@
         }
     }
 
-    internal async void SetCurrentPage(int page)
+    internal void SetCurrentPage(int page)
     {
         if (CurrentPage != page)
         {

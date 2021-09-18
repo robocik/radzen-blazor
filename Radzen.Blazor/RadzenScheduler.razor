@@ -11,23 +11,33 @@
 <CascadingValue Value="@this">
     @ChildContent
 </CascadingValue>
-<div @ref=Element  style=@Style @attributes=@Attributes class=@GetCssClass() id=@GetId()>
-    <div class="rz-scheduler-nav">
-        <div class="rz-scheduler-nav-prev-next">
-            <button class="rz-button rz-prev" @onclick=@OnPrev><RadzenIcon Icon="chevron_left" /></button>
-            <button class="rz-button rz-next" @onclick=@OnNext><RadzenIcon Icon="chevron_right" /></button>
-            <button class="rz-button rz-today" @onclick=@OnToday>@TodayText</button>
+    <div @ref=Element style=@Style @attributes=@Attributes class=@GetCssClass() id=@GetId()>
+        <div class="rz-scheduler-nav">
+            <div class="rz-scheduler-nav-prev-next btn-toolbar" role="toolbar" aria-label="Toolbar with button groups">
+                <div class="btn-group me-2" role="group" aria-label="First group">
+                    <button class="btn btn-primary rz-prev" @onclick=@OnPrev><i class="fas fa-chevron-left"></i></button>
+                    <button class="btn btn-primary rz-next" @onclick=@OnNext><i class="fas fa-chevron-right"></i></button>
+                </div>
+                <div class="btn-group me-2" role="group" aria-label="Second group">
+                    <button class="btn btn-secondary rz-today" @onclick=@OnToday>@TodayText</button>
+                </div>
+
+            </div>
+
+            <div class="rz-scheduler-nav-title">@SelectedView?.Title</div>
+            <div class="rz-scheduler-nav-views btn-group me-2">
+                <div class="btn-group flex-wrap" role="group" >
+                    @foreach (var view in Views)
+                    {
+                        <button class="@($"btn {(IsSelected(view) ? "btn-primary" : "btn-outline-primary")}")" @onclick=@(args => OnChangeView(view))>@view.Text</button>
+                    }
+                </div>
+                
+            </div>
         </div>
-        <div class="rz-scheduler-nav-title">@SelectedView?.Title</div>
-        <div class="rz-scheduler-nav-views">
-        @foreach (var view in Views)
-        {
-            <button class="@($"rz-button{(IsSelected(view)? " rz-state-active" : "")}")" @onclick=@(args => OnChangeView(view))>@view.Text</button>
-        }
-        </div>
+        
+        @SelectedView?.Render()
     </div>
-    @SelectedView?.Render()
-</div>
 }
 @code {
     [Parameter]
@@ -307,6 +317,8 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        await base.OnAfterRenderAsync(firstRender);
+
         if (firstRender)
         {
             var rect = await JSRuntime.InvokeAsync<Rect>("Radzen.createScheduler", Element, Reference);
@@ -339,7 +351,11 @@
     public override void Dispose()
     {
         base.Dispose();
-        JSRuntime.InvokeVoidAsync("Radzen.destroyScheduler", Element);
+
+        if (IsJSRuntimeAvailable)
+        {
+            JSRuntime.InvokeVoidAsync("Radzen.destroyScheduler", Element);
+        }
     }
 
     private bool heightIsSet = false;

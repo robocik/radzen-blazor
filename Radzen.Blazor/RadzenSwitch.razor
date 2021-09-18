@@ -3,13 +3,13 @@
 @inherits FormComponent<bool>
 @if (Visible)
 {
-<div @ref="@Element" @attributes="Attributes" class="@GetCssClass()"
-     @onmouseup="@OnMouseUp" @onkeypress="@(async (args) => { if (args.Code == "Space") { await Toggle(); } })" style="outline: 0 none;@Style" tabindex="@TabIndex">
-    <div class="rz-helper-hidden-accessible">
+    <div @ref="@Element" @attributes="Attributes" class="form-check form-switch @CssClass"  style="@Style" tabindex="@TabIndex">
+        @*<div class="rz-helper-hidden-accessible">
         <input type="checkbox" name="@Name" value="@Value" tabindex="-1">
     </div>
-    <span class="rz-switch-circle@(Disabled ? " rz-disabled" : "")"></span>
-</div>
+    <span class="rz-switch-circle@(Disabled ? " rz-disabled" : "")"></span>*@
+        <input class="form-check-input" type="checkbox" name="@Name" value="@Value" disabled="@Disabled" >
+    </div>
 }
 @code {
     protected override string GetComponentCssClass()
@@ -17,6 +17,9 @@
         var fieldCssClass = FieldIdentifier.FieldName != null ? EditContext?.FieldCssClass(FieldIdentifier) : "";
         return $"rz-switch {(Value ? " rz-switch-checked " : "")} {fieldCssClass}";
     }
+
+    [Parameter]
+    public virtual string CssClass { get; set; }
 
     public async Task OnMouseUp(MouseEventArgs args)
     {

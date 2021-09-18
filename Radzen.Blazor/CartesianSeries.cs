@@ -250,6 +250,7 @@ namespace Radzen.Blazor
                 }
 
                 Chart.Refresh(false);
+                Chart.DisplayTooltip();
             }
         }
 
@@ -429,6 +430,16 @@ namespace Radzen.Blazor
             var index = Convert.ToInt32((x - startX) / ((endX - startX) / count));
 
             return Items.ElementAtOrDefault(index);
+        }
+
+        protected string PickColor(int index, IEnumerable<string> colors, string defaultValue = null)
+        {
+            if (colors == null || !colors.Any())
+            {
+                return defaultValue;
+            }
+
+            return colors.ElementAt(index % colors.Count());
         }
 
         public void Dispose()

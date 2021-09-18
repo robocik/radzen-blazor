@@ -1,16 +1,15 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using Microsoft.AspNetCore.Components;
-using System.Linq.Dynamic.Core;
-using System.Linq;
-using System.Linq.Expressions;
+﻿using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Radzen.Blazor;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Dynamic.Core;
+using System.Linq.Expressions;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Threading.Tasks;
-using System.Text.Encodings.Web;
-using System.Security.Cryptography.X509Certificates;
 
 namespace Radzen
 {
@@ -71,9 +70,26 @@ namespace Radzen
         public bool FirstRender { get; internal set; }
     }
 
+    public class DataGridRenderEventArgs<T>
+    {
+        public RadzenDataGrid<T> Grid { get; internal set; }
+        public bool FirstRender { get; internal set; }
+    }
+
     public class CellRenderEventArgs<T> : RowRenderEventArgs<T>
     {
         public Blazor.RadzenGridColumn<T> Column { get; internal set; }
+    }
+
+    public class DataGridCellRenderEventArgs<T> : RowRenderEventArgs<T>
+    {
+        public Blazor.RadzenDataGridColumn<T> Column { get; internal set; }
+    }
+
+
+    public class DataGridRowMouseEventArgs<T> : Microsoft.AspNetCore.Components.Web.MouseEventArgs
+    {
+        public T Data { get; internal set; }
     }
 
     public class UploadChangeEventArgs
@@ -156,6 +172,12 @@ namespace Radzen
         }
     }
 
+    public enum TabRenderMode
+    {
+        Server,
+        Client
+    }
+
     public enum PagerPosition
     {
         Top,
@@ -199,6 +221,12 @@ namespace Radzen
     {
         Horizontal,
         Vertical
+    }
+
+    public enum SortOrder
+    {
+        Ascending,
+        Descending
     }
 
     public enum ButtonType
@@ -250,6 +278,20 @@ namespace Radzen
         EndsWith
     }
 
+    public enum FilterOperator
+    {
+        Equals,
+        NotEquals,
+        LessThan,
+        LessThanOrEquals,
+        GreaterThan,
+        GreaterThanOrEquals,
+        Contains,
+        StartsWith,
+        EndsWith,
+        DoesNotContain
+    }
+
     public enum TextAlign
     {
         Left,
@@ -257,10 +299,49 @@ namespace Radzen
         Center
     }
 
+    public enum BadgeStyle
+    {
+        Primary,
+        Secondary,
+        Light,
+        Success,
+        Danger,
+        Warning,
+        Info
+    }
+
+    public class DataGridColumnResizedEventArgs<T>
+    {
+        public RadzenDataGridColumn<T> Column { get; internal set; }
+        public double Width { get; internal set; }
+    }
+
+    public class DataGridColumnReorderedEventArgs<T>
+    {
+        public RadzenDataGridColumn<T> Column { get; internal set; }
+        public int OldIndex { get; internal set; }
+        public int NewIndex { get; internal set; }
+    }
+
     public class ColumnResizedEventArgs<T>
-    { 
+    {
         public RadzenGridColumn<T> Column { get; internal set; }
         public double Width { get; internal set; }
+    }
+    public class FilterDescriptor
+    {
+        public string Property { get; set; }
+        public object FilterValue { get; set; }
+        public FilterOperator FilterOperator { get; set; }
+        public object SecondFilterValue { get; set; }
+        public FilterOperator SecondFilterOperator { get; set; }
+        public LogicalFilterOperator LogicalFilterOperator { get; set; }
+    }
+
+    public class SortDescriptor
+    {
+        public string Property { get; set; }
+        public SortOrder SortOrder { get; set; }
     }
 
     public class LoadDataArgs
@@ -269,6 +350,8 @@ namespace Radzen
         public int? Top { get; set; }
         public string OrderBy { get; set; }
         public string Filter { get; set; }
+        public IEnumerable<FilterDescriptor> Filters { get; set; }
+        public IEnumerable<SortDescriptor> Sorts { get; set; }
     }
 
     public class PagerEventArgs
@@ -388,13 +471,22 @@ namespace Radzen
         public static Func<TItem, TValue> Getter<TItem, TValue>(string propertyName)
         {
             var arg = Expression.Parameter(typeof(TItem));
-            var body = Expression.Convert(Expression.Property(arg, propertyName), typeof(TValue));
+
+            Expression body = arg;
+
+            foreach (var member in propertyName.Split("."))
+            {
+                body = Expression.PropertyOrField(body, member);
+            }
+
+            body = Expression.Convert(body, typeof(TValue));
 
             return Expression.Lambda<Func<TItem, TValue>>(body, arg).Compile();
         }
 
         public static bool IsDate(Type source)
         {
+            if (source == null) return false;
             var type = source.IsGenericType ? source.GetGenericArguments()[0] : source;
 
             if (type == typeof(DateTime) || type == typeof(DateTimeOffset))
@@ -483,6 +575,9 @@ namespace Radzen
 
         public static bool IsNumeric(Type source)
         {
+            if (source == null)
+                return false;
+
             var type = source.IsGenericType ? source.GetGenericArguments()[0] : source;
 
             switch (Type.GetTypeCode(type))
@@ -655,5 +750,17 @@ namespace Radzen
 
             return false;
         }
+    }
+    public class RadzenSplitterEventArgs
+    {
+        public int PaneIndex { get; set; }
+        public RadzenSplitterPane Pane { get; set; }
+        public bool Cancel { get; set; }
+
+    }
+
+    public class RadzenSplitterResizeEventArgs:RadzenSplitterEventArgs
+    {
+        public double NewSize { get; set; }
     }
 }

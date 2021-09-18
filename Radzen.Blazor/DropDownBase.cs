@@ -6,6 +6,7 @@ using System.Linq.Dynamic.Core;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Rendering;
 using Microsoft.JSInterop;
 using Radzen.Blazor;
 
@@ -13,6 +14,84 @@ namespace Radzen
 {
     public class DropDownBase<T> : DataBoundFormComponent<T>
     {
+#if NET5
+        internal Microsoft.AspNetCore.Components.Web.Virtualization.Virtualize<object> virtualize;
+
+        private async ValueTask<Microsoft.AspNetCore.Components.Web.Virtualization.ItemsProviderResult<object>> LoadItems(Microsoft.AspNetCore.Components.Web.Virtualization.ItemsProviderRequest request)
+        {
+            var data = Data != null ? Data.Cast<object>() : Enumerable.Empty<object>();
+            var view = (LoadData.HasDelegate ? data : View).Cast<object>().AsQueryable();
+            var totalItemsCount = LoadData.HasDelegate ? Count : view.Count();
+            var top = Math.Min(request.Count, totalItemsCount - request.StartIndex);
+
+            if (LoadData.HasDelegate)
+            {
+                await LoadData.InvokeAsync(new Radzen.LoadDataArgs() { Skip = request.StartIndex, Top = top, Filter = await JSRuntime.InvokeAsync<string>("Radzen.getInputValue", search) });
+            }
+
+            return new Microsoft.AspNetCore.Components.Web.Virtualization.ItemsProviderResult<object>(LoadData.HasDelegate ? Data.Cast<object>() : view.Skip(request.StartIndex).Take(top), totalItemsCount);
+        }
+
+        [Parameter]
+        public int Count { get; set; }
+
+        [Parameter]
+        public bool AllowVirtualization { get; set; }
+
+        [Parameter]
+        public int PageSize { get; set; } = 5;
+#endif
+        internal bool IsVirtualizationAllowed()
+        {
+#if NET5
+            return AllowVirtualization;
+#else
+            return false;
+#endif
+        }
+
+        internal virtual RenderFragment RenderItems()
+        {
+            return new RenderFragment(builder =>
+            {
+#if NET5
+                if (AllowVirtualization)
+                {
+                    builder.OpenComponent(0, typeof(Microsoft.AspNetCore.Components.Web.Virtualization.Virtualize<object>));
+                    builder.AddAttribute(1, "ItemsProvider", new Microsoft.AspNetCore.Components.Web.Virtualization.ItemsProviderDelegate<object>(LoadItems));
+                    builder.AddAttribute(2, "ChildContent", (RenderFragment<object>)((context) =>
+                    {
+                        return (RenderFragment)((b) =>
+                        {
+                            RenderItem(b, context);
+                        });
+                    }));
+
+                    builder.AddComponentReferenceCapture(7, c => { virtualize = (Microsoft.AspNetCore.Components.Web.Virtualization.Virtualize<object>)c; });
+
+                    builder.CloseComponent();
+                }
+                else
+                {
+                    foreach (var item in LoadData.HasDelegate ? Data : View)
+                    {
+                        RenderItem(builder, item);
+                    }
+                }
+#else
+                foreach (var item in LoadData.HasDelegate ? Data : View)
+                {
+                    RenderItem(builder, item);
+                }
+#endif
+            });
+        }
+
+        internal virtual void RenderItem(RenderTreeBuilder builder, object item)
+        {
+            //
+        }
+
         [Parameter]
         public virtual bool AllowFiltering { get; set; }
 
@@ -189,7 +268,7 @@ namespace Radzen
             if (Disabled)
                 return;
 
-            var items = (LoadData.HasDelegate ? Data != null ? Data : Enumerable.Empty<object>() : (View != null ? View : Enumerable.Empty<object>())).OfType<object>();
+            var items = (LoadData.HasDelegate ? Data != null ? Data : Enumerable.Empty<object>() : (View != null ? View : Enumerable.Empty<object>())).Cast<object>();
 
             var key = args.Code != null ? args.Code : args.Key;
 
@@ -240,6 +319,11 @@ namespace Radzen
                     selectedIndex = -1;
                     await OnSelectItem(null, true);
                 }
+
+                if (AllowFiltering && isFilter)
+                {
+                    Debounce(DebounceFilter, FilterDelay);
+                }
             }
             else if(AllowFiltering && isFilter)
             {
@@ -258,12 +342,40 @@ namespace Radzen
             {
                 searchText = await JSRuntime.InvokeAsync<string>("Radzen.getInputValue", search);
                 _view = null;
-                await InvokeAsync(() => { StateHasChanged(); });
+                if (IsVirtualizationAllowed())
+                {
+#if NET5
+                    if (virtualize != null)
+                    {
+                        await virtualize.RefreshDataAsync();
+                    }
+                    await InvokeAsync(() => { StateHasChanged(); });
+#endif 
+                }
+                else
+                {
+                    await InvokeAsync(() => { StateHasChanged(); });
+                }
             }
             else
             {
-                await LoadData.InvokeAsync(new Radzen.LoadDataArgs() { Filter = await JSRuntime.InvokeAsync<string>("Radzen.getInputValue", search) });
+                if (IsVirtualizationAllowed())
+                {
+#if NET5
+                    if (virtualize != null)
+                    {
+                        await InvokeAsync(virtualize.RefreshDataAsync);
+                    }
+                    await InvokeAsync(() => { StateHasChanged(); });
+#endif 
+                }
+                else
+                {
+                    await LoadData.InvokeAsync(await GetLoadDataArgs());
+                }   
             }
+
+            await JSRuntime.InvokeAsync<string>("Radzen.repositionPopup", Element, PopupID);
         }
 
         protected async System.Threading.Tasks.Task OnKeyPress(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs args)
@@ -278,16 +390,23 @@ namespace Radzen
 
         protected virtual async System.Threading.Tasks.Task OnFilter(ChangeEventArgs args)
         {
-            if (!LoadData.HasDelegate)
+            await DebounceFilter();
+        }
+
+        internal virtual async System.Threading.Tasks.Task<LoadDataArgs> GetLoadDataArgs()
+        {
+#if NET5
+            if (AllowVirtualization)
             {
-                searchText = await JSRuntime.InvokeAsync<string>("Radzen.getInputValue", search);
-                _view = null;
-                StateHasChanged();
+                return new Radzen.LoadDataArgs() { Skip = 0, Top = PageSize, Filter = await JSRuntime.InvokeAsync<string>("Radzen.getInputValue", search) };
             }
             else
             {
-                await LoadData.InvokeAsync(new Radzen.LoadDataArgs() { Filter = await JSRuntime.InvokeAsync<string>("Radzen.getInputValue", search) });
+                return new Radzen.LoadDataArgs() { Filter = await JSRuntime.InvokeAsync<string>("Radzen.getInputValue", search) };
             }
+#else
+            return new Radzen.LoadDataArgs() { Filter = await JSRuntime.InvokeAsync<string>("Radzen.getInputValue", search) };
+#endif
         }
 
         private bool firstRender = true;
@@ -301,6 +420,13 @@ namespace Radzen
 
         public override async Task SetParametersAsync(ParameterView parameters)
         {
+#if NET5
+            var pageSize = parameters.GetValueOrDefault<int>(nameof(PageSize));
+            if(pageSize != default(int))
+            {
+                PageSize = pageSize;
+            }
+#endif
             var shouldClose = false;
 
             if (parameters.DidParameterChange(nameof(Visible), Visible))
@@ -339,7 +465,7 @@ namespace Radzen
             Value = args.Value;
         }
 
-        protected bool isSelected(object item)
+        internal bool isSelected(object item)
         {
             if (Multiple)
             {
@@ -372,7 +498,52 @@ namespace Radzen
         {
             get
             {
-                return (LoadData.HasDelegate ? Data != null ? Data : Enumerable.Empty<object>() : (View != null ? View : Enumerable.Empty<object>())).OfType<object>();
+                return (LoadData.HasDelegate ? Data != null ? Data : Enumerable.Empty<object>() : (View != null ? View : Enumerable.Empty<object>())).Cast<object>();
+            }
+        }
+
+        protected override IEnumerable View
+        {
+            get
+            {
+                if (_view == null && Query != null)
+                {
+                    if (!string.IsNullOrEmpty(searchText))
+                    {
+                        var ignoreCase = FilterCaseSensitivity == FilterCaseSensitivity.CaseInsensitive;
+
+                        var query = new List<string>();
+
+                        if (!string.IsNullOrEmpty(TextProperty))
+                        {
+                            query.Add(TextProperty);
+                        }
+
+                        query.Add("ToString()");
+
+                        if (ignoreCase)
+                        {
+                            query.Add("ToLower()");
+                        }
+
+                        query.Add($"{Enum.GetName(typeof(StringFilterOperator), FilterOperator)}(@0)");
+
+                        _view = Query.Where(String.Join(".", query), ignoreCase ? searchText.ToLower() : searchText);
+                    }
+                    else
+                    {
+                        if (IsVirtualizationAllowed())
+                        {
+                            _view = Query;
+                        }
+                        else
+                        {
+                            _view = (typeof(IQueryable).IsAssignableFrom(Data.GetType())) ? Query.Cast<object>().ToList().AsQueryable() : Query;
+                        }
+                    }
+                }
+
+                return _view;
             }
         }
 
@@ -380,16 +551,24 @@ namespace Radzen
         {
             if (selectedItem != null)
             {
-                var result = Items.Select((x, i) => new { Item = x, Index = i }).FirstOrDefault(itemWithIndex => object.Equals(itemWithIndex.Item, selectedItem));
-                if (result != null)
+                if (typeof(EnumerableQuery).IsAssignableFrom(View.GetType()))
                 {
-                    selectedIndex = result.Index;
+                    var result = Items.Select((x, i) => new { Item = x, Index = i }).FirstOrDefault(itemWithIndex => object.Equals(itemWithIndex.Item, selectedItem));
+                    if (result != null)
+                    {
+                        selectedIndex = result.Index;
+                    }
                 }
             }
             else
             {
                 selectedIndex = -1;
             }
+        }
+
+        internal async System.Threading.Tasks.Task SelectItemInternal(object item, bool raiseChange = true)
+        {
+            await SelectItem(item, raiseChange);
         }
 
         protected async System.Threading.Tasks.Task SelectItem(object item, bool raiseChange = true)
@@ -498,7 +677,7 @@ namespace Radzen
                                     item = View.AsQueryable().Where($@"{ValueProperty} == @0", v).FirstOrDefault();
                                 }
 
-                                if (item != null && selectedItems.IndexOf(item) == -1)
+                                if (!object.Equals(item, null) && selectedItems.IndexOf(item) == -1)
                                 {
                                     selectedItems.Add(item);
                                 }

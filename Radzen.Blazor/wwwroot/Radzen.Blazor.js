@@ -129,7 +129,9 @@ window.Radzen = {
         return false;
       }
     };
-    el.addEventListener('keydown', preventDefault, false);
+    if (el) {
+       el.addEventListener('keydown', preventDefault, false);
+    }
   },
   loadGoogleMaps: function (defaultView, apiKey, resolve, reject) {
     resolveCallbacks.push(resolve);
@@ -590,11 +592,34 @@ window.Radzen = {
     }
     return popups;
   },
+  repositionPopup: function (parent, id) {
+      var popup = document.getElementById(id);
+      if (!popup) return;
+
+      var rect = popup.getBoundingClientRect();
+      var parentRect = parent ? parent.getBoundingClientRect() : { top: 0, bottom: 0, left: 0, right: 0, width: 0, height: 0 };
+
+      if (/Edge/.test(navigator.userAgent)) {
+          var scrollTop = document.body.scrollTop;
+      } else {
+          var scrollTop = document.documentElement.scrollTop;
+      }
+
+      var top = parentRect.bottom + scrollTop;
+
+      if (top + rect.height > window.innerHeight && parentRect.top > rect.height) {
+          top = parentRect.top - rect.height + scrollTop;
+      }
+
+      popup.style.top = top + 'px';
+  },
   openPopup: function (parent, id, syncWidth, position, x, y, instance, callback) {
     var popup = document.getElementById(id);
     if (!popup) return;
 
-    var parentRect = parent ? parent.getBoundingClientRect() : { top: 0, bottom: 0, left: 0, right: 0, width: 0, height: 0 };
+    Radzen.activeElement = document.activeElement;
+
+    var parentRect = parent ? parent.getBoundingClientRect() : { top: y || 0, bottom: 0, left: x || 0, right: 0, width: 0, height: 0 };
 
     if (/Edge/.test(navigator.userAgent)) {
       var scrollLeft = document.body.scrollLeft;
@@ -604,8 +629,8 @@ window.Radzen = {
       var scrollTop = document.documentElement.scrollTop;
     }
 
-    var top = y ? y + scrollTop: parentRect.bottom + scrollTop;
-    var left = x ? x + scrollLeft: parentRect.left + scrollLeft;
+    var top = y ? y : parentRect.bottom;
+    var left = x ? x : parentRect.left;
 
     if (syncWidth) {
         popup.style.width = parentRect.width + 'px';
@@ -620,12 +645,8 @@ window.Radzen = {
 
     var smartPosition = !position || position == 'bottom';
 
-    if (
-      smartPosition &&
-      top + rect.height > window.innerHeight &&
-      parentRect.top > rect.height
-    ) {
-      top = parentRect.top - rect.height + scrollTop;
+    if (smartPosition && top + rect.height > window.innerHeight && parentRect.top > rect.height) {
+      top = parentRect.top - rect.height;
 
       if (position) {
         top = top - 40;
@@ -638,12 +659,8 @@ window.Radzen = {
       }
     }
 
-    if (
-      smartPosition &&
-      left + rect.width - scrollLeft > window.innerWidth &&
-      window.innerWidth > rect.width
-    ) {
-      left = window.innerWidth - rect.width + scrollLeft;
+    if (smartPosition && left + rect.width > window.innerWidth && window.innerWidth > rect.width) {
+      left = window.innerWidth - rect.width;
 
       if (position) {
         var tooltipContent = popup.children[0];
@@ -651,8 +668,8 @@ window.Radzen = {
         if (tooltipContent.classList.contains(tooltipContentClassName)) {
           tooltipContent.classList.remove(tooltipContentClassName);
           tooltipContent.classList.add('rz-left-tooltip-content');
-          left = parentRect.left - rect.width - 5 + scrollLeft;
-          top = parentRect.top - parentRect.height + scrollTop;
+          left = parentRect.left - rect.width - 5;
+          top = parentRect.top - parentRect.height;
         }
       }
     }
@@ -661,30 +678,26 @@ window.Radzen = {
       if (position) {
         top = top + 20;
       }
-
-      popup.style.top = top + 'px';
-    }
-
-    if (smartPosition) {
-      popup.style.left = left + 'px';
     }
 
     if (position == 'left') {
-      popup.style.left = parentRect.left - rect.width - 5 + 'px';
-      popup.style.top = parentRect.top + scrollTop + 'px';
+      left = parentRect.left - rect.width - 5;
+      top =  parentRect.top;
     }
 
     if (position == 'right') {
-      popup.style.left = parentRect.right + 10 + 'px';
-      popup.style.top = parentRect.top + scrollTop + 'px';
+      left = parentRect.right + 10;
+      top = parentRect.top;
     }
 
     if (position == 'top') {
-      popup.style.top = parentRect.top + scrollTop - rect.height + 5 + 'px';
-      popup.style.left = parentRect.left + scrollLeft + 'px';
+      top = parentRect.top - rect.height + 5;
+      left = parentRect.left;
     }
 
     popup.style.zIndex = 3000;
+    popup.style.left = left + scrollLeft + 'px';
+    popup.style.top = top + scrollTop + 'px';
 
     if (!popup.classList.contains('rz-overlaypanel')) {
         popup.classList.add('rz-popup');
@@ -693,7 +706,7 @@ window.Radzen = {
     Radzen[id] = function (e) {
         if (!e.defaultPrevented) {
           if (parent) {
-            if (!parent.contains(e.target) && !popup.contains(e.target)) {
+            if (e.type == 'click' && !parent.contains(e.target) && !popup.contains(e.target)) {
               Radzen.closePopup(id, instance, callback);
             }
           } else {
@@ -704,9 +717,31 @@ window.Radzen = {
         }
     };
 
+    if (!Radzen.closePopupsOnScroll) {
+        Radzen.closePopupsOnScroll = function (e) {
+            for (var i = 0; i < Radzen.popups.length; i++) {
+                var p = Radzen.popups[i];
+                Radzen.closePopup(p.id, p.instance, p.callback);
+            }
+            Radzen.popups = [];
+        };
+        Radzen.popups = [];
+    }
+
+    Radzen.popups.push({id, instance, callback});
+
     document.body.appendChild(popup);
     document.removeEventListener('click', Radzen[id]);
     document.addEventListener('click', Radzen[id]);
+
+    var p = parent;
+    while (p && p != document.body) {
+        if (p.scrollWidth > p.clientWidth || p.scrollHeight > p.clientHeight) {
+            p.removeEventListener('scroll', Radzen.closePopupsOnScroll);
+            p.addEventListener('scroll', Radzen.closePopupsOnScroll);
+        }
+        p = p.parentElement;
+    }
 
     if (!parent) {
         document.removeEventListener('contextmenu', Radzen[id]);
@@ -715,6 +750,9 @@ window.Radzen = {
   },
   closePopup: function (id, instance, callback) {
     var popup = document.getElementById(id);
+    if (!popup) return;
+    if (popup.style.display == 'none') return;
+
     if (popup) {
       popup.style.display = 'none';
     }
@@ -723,6 +761,11 @@ window.Radzen = {
 
     if (instance) {
       instance.invokeMethodAsync(callback);
+    }
+
+    if (Radzen.activeElement) {
+        Radzen.activeElement.focus();
+        Radzen.activeElement = null;
     }
   },
   togglePopup: function (parent, id, syncWidth, instance, callback) {
@@ -761,16 +804,32 @@ window.Radzen = {
         }
     }
   },
-  openDialog: function () {
+  openDialog: function (options) {
     if (
       document.documentElement.scrollHeight >
       document.documentElement.clientHeight
     ) {
       document.body.classList.add('no-scroll');
     }
+
+    if (options.autoFocusFirstElement) {
+        setTimeout(function () {
+            var dialogs = document.querySelectorAll('.rz-dialog-content');
+            if (dialogs.length == 0) return;
+            var lastDialog = dialogs[dialogs.length - 1];
+
+            if (lastDialog) {
+                var focusable = lastDialog.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+                var firstFocusable = focusable[0];
+                if (firstFocusable) {
+                    firstFocusable.focus();
+                }
+            }
+        }, 500);
+    }
   },
   closeDialog: function () {
-    document.body.classList.remove('no-scroll');
+      document.body.classList.remove('no-scroll');
   },
   getInputValue: function (arg) {
     var input =
@@ -1115,6 +1174,43 @@ window.Radzen = {
     document.removeEventListener('touchmove', ref.touchMoveHandler)
     document.removeEventListener('touchend', ref.mouseUpHandler);
   },
+  startColumnReorder: function(id) {
+      var el = document.getElementById(id);
+      var cell = el.parentNode.parentNode;
+      var visual = document.createElement("th");
+      visual.className = cell.className + ' rz-column-draggable';
+      visual.style = cell.style;
+      visual.style.display = 'none';
+      visual.style.position = 'absolute';
+      visual.style.height = cell.offsetHeight + 'px';
+      visual.style.width = cell.offsetWidth + 'px';
+      visual.style.zIndex = 2000;
+      visual.innerHTML = cell.innerHTML;
+      visual.id = id + 'visual';
+      document.body.appendChild(visual);
+
+      Radzen[id + 'end'] = function (e) {
+          var el = document.getElementById(id + 'visual');
+          if (el) {
+              document.body.removeChild(el);
+              Radzen[id + 'end'] = null;
+              Radzen[id + 'move'] = null;
+          }
+      }
+      document.removeEventListener('click', Radzen[id + 'end']);
+      document.addEventListener('click', Radzen[id + 'end']);
+
+      Radzen[id + 'move'] = function (e) {
+          var el = document.getElementById(id + 'visual');
+          if (el) {
+              el.style.display = 'block';
+              el.style.top = e.clientY + 10 + 'px';
+              el.style.left = e.clientX + 10 + 'px';
+          }
+      }
+      document.removeEventListener('mousemove', Radzen[id + 'move']);
+      document.addEventListener('mousemove', Radzen[id + 'move']);
+  },
   startColumnResize: function(id, grid, columnIndex, clientX) {
       var el = document.getElementById(id);
       var cell = el.parentNode.parentNode;
@@ -1165,5 +1261,140 @@ window.Radzen = {
       document.addEventListener('mouseup', Radzen[el].mouseUpHandler);
       document.addEventListener('touchmove', Radzen[el].touchMoveHandler, { passive: true })
       document.addEventListener('touchend', Radzen[el].mouseUpHandler, { passive: true });
-  }
+  },
+      startSplitterResize: function(id,
+        splitter,
+        paneId,
+        paneNextId,
+        orientation,
+        clientPos,
+        minValue,
+        maxValue,
+        minNextValue,
+        maxNextValue) {
+
+        var el = document.getElementById(id);
+        var pane = document.getElementById(paneId);
+        var paneNext = document.getElementById(paneNextId);
+        var paneLength;
+        var paneNextLength;
+        var panePerc;
+        var paneNextPerc;
+        var isHOrientation=orientation == 'Horizontal';
+
+        var totalLength = 0.0;
+        Array.from(el.children).forEach(element => {
+            totalLength += isHOrientation
+                ? element.getBoundingClientRect().width
+                : element.getBoundingClientRect().height;
+        });
+
+        if (pane) {
+            paneLength = isHOrientation
+                ? pane.getBoundingClientRect().width
+                : pane.getBoundingClientRect().height;
+
+            panePerc = (paneLength / totalLength * 100) + '%';
+        }
+
+        if (paneNext) {
+            paneNextLength = isHOrientation
+                ? paneNext.getBoundingClientRect().width
+                : paneNext.getBoundingClientRect().height;
+
+            paneNextPerc = (paneNextLength / totalLength * 100) + '%';
+        }
+
+        function ensurevalue(value) {
+            if (!value)
+                return null;
+
+            value=value.trim().toLowerCase();
+
+            if (value.endsWith("%"))
+                return totalLength*parseFloat(value)/100;
+            
+            if (value.endsWith("px"))
+                return parseFloat(value);
+
+            throw 'Invalid value';
+        }
+
+        minValue=ensurevalue(minValue);
+        maxValue=ensurevalue(maxValue);
+        minNextValue=ensurevalue(minNextValue);
+        maxNextValue=ensurevalue(maxNextValue);
+        
+        Radzen[el] = {
+            clientPos: clientPos,
+            panePerc: parseFloat(panePerc),
+            paneNextPerc: isFinite(parseFloat(paneNextPerc)) ? parseFloat(paneNextPerc) : 0,
+            paneLength: paneLength,
+            paneNextLength: isFinite(paneNextLength) ? paneNextLength : 0,
+            mouseUpHandler: function(e) {
+                if (Radzen[el]) {
+                    splitter.invokeMethodAsync(
+                        'RadzenSplitter.OnPaneResized',
+                        parseInt(pane.getAttribute('data-index')),
+                        parseFloat(pane.style.flexBasis),
+                        paneNext ? parseInt(paneNext.getAttribute('data-index')) : null,
+                        paneNext ? parseFloat(paneNext.style.flexBasis) : null
+                    );
+                    document.removeEventListener('mousemove', Radzen[el].mouseMoveHandler);
+                    document.removeEventListener('mouseup', Radzen[el].mouseUpHandler);
+                    document.removeEventListener('touchmove', Radzen[el].touchMoveHandler);
+                    document.removeEventListener('touchend', Radzen[el].mouseUpHandler);
+                    Radzen[el] = null;
+                }
+            },
+            mouseMoveHandler: function(e) {
+                if (Radzen[el]) {
+
+                    var spacePerc = Radzen[el].panePerc + Radzen[el].paneNextPerc;
+                    var spaceLength = Radzen[el].paneLength + Radzen[el].paneNextLength;
+
+                    var length = (Radzen[el].paneLength -
+                        (Radzen[el].clientPos - (isHOrientation ? e.clientX : e.clientY)));
+                    
+                    if (length > spaceLength)
+                        length = spaceLength;
+
+                    if (minValue && length < minValue) length = minValue;
+                    if (maxValue && length > maxValue) length = maxValue;
+
+                    if (paneNext) {
+                        var nextSpace=spaceLength-length;
+                        if (minNextValue && nextSpace < minNextValue) length = spaceLength-minNextValue;
+                        if (maxNextValue && nextSpace > maxNextValue) length = spaceLength+maxNextValue;
+                    }
+                    
+                    var perc = length / Radzen[el].paneLength;
+                    if (!isFinite(perc)) {
+                        perc = 1;
+                        Radzen[el].panePerc = 0.1;
+                        Radzen[el].paneLength =isHOrientation
+                            ? pane.getBoundingClientRect().width
+                            : pane.getBoundingClientRect().height;
+                    }
+                    
+                    var newPerc =  Radzen[el].panePerc * perc;
+                    if (newPerc < 0) newPerc = 0;
+                    if (newPerc > 100) newPerc = 100;
+                    
+                    pane.style.flexBasis = newPerc + '%';
+                    if (paneNext)
+                        paneNext.style.flexBasis = (spacePerc - newPerc) + '%';
+                }
+            },
+            touchMoveHandler: function(e) {
+                if (e.targetTouches[0]) {
+                    Radzen[el].mouseMoveHandler(e.targetTouches[0]);
+                }
+            }
+        };
+        document.addEventListener('mousemove', Radzen[el].mouseMoveHandler);
+        document.addEventListener('mouseup', Radzen[el].mouseUpHandler);
+        document.addEventListener('touchmove', Radzen[el].touchMoveHandler, { passive: true });
+        document.addEventListener('touchend', Radzen[el].mouseUpHandler, { passive: true });
+    }
 };

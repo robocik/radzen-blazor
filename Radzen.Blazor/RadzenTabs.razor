@@ -5,14 +5,28 @@
 @if (Visible)
 {
     <div @ref=@Element style=@Style @attributes=@Attributes class=@GetCssClass() id=@GetId()>
-        <ul role="tablist" class="rz-tabview-nav">
+        <ul role="tablist" class="nav nav-tabs">
             @Tabs
         </ul>
         <div class="rz-tabview-panels">
-            @if (SelectedTab?.Visible == true)
+            @if(RenderMode == TabRenderMode.Client)
             {
-                <div class="rz-tabview-panel" role="tabpanel" id="@($"{Id}-tabpanel-{selectedIndex}")" aria-hidden="false" aria-labelledby="@($"{Id}-tabpanel-{selectedIndex}-label")">
-                    @SelectedTab.ChildContent
+                for (var i = 0; i < tabs.Count; i++)
+                {
+                <div class="rz-tabview-panel" role="tabpanel" id="@($"{Id}-tabpanel-{i}")" style="@(tabs[i] == SelectedTab ? "" : "display:none")" aria-hidden="@(tabs[i] == SelectedTab ? "false" : "true")" aria-labelledby="@($"{Id}-tabpanel-{i}-label")">
+                    @tabs[i].ChildContent
+                </div>                            
+                }
+            }
+            else
+            {
+                <div class="tab-content">
+                    @if (SelectedTab?.Visible == true)
+                    {
+                        <div class="rz-tabview-panel tab-pane active @BodyCss" role="tabpanel" id="@($"{Id}-tabpanel-{selectedIndex}")" aria-hidden="false" aria-labelledby="@($"{Id}-tabpanel-{selectedIndex}-label")">
+                            @SelectedTab.ChildContent
+                        </div>
+                    }
                 </div>
             }
         </div>
@@ -22,7 +36,13 @@
 
 @code {
     [Parameter]
+    public TabRenderMode RenderMode { get; set; } = TabRenderMode.Server;
+
+    [Parameter]
     public int SelectedIndex { get; set; } = -1;
+
+    [Parameter]
+    public string BodyCss { get; set; }
 
     private int selectedIndex = -1;
 
@@ -123,7 +143,7 @@
 
     protected override string GetComponentCssClass()
     {
-        return "rz-tabview";
+        return "";
     }
 
     protected override void OnInitialized()

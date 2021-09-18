@@ -31,7 +31,9 @@
                 _title = value;
 
                 if (Grid != null)
-                    Grid.ChangeState();
+                {
+                    Grid.ChangeState().Wait();
+                }
             }
         }
     }
@@ -278,6 +280,8 @@
             return Property;
         }
     }
+
+    internal SortOrder? SortOrder { get; set; }
 
     public string GetFilterProperty()
     {

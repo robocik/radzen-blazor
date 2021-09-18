@@ -48,6 +48,18 @@
                 <RadzenButton style="margin-bottom: 16px"   Click=@(args => OnClick("Warning button ")) Text="Warning" ButtonStyle="ButtonStyle.Warning" />
             </div>
         </div>
+        <h4>Busy Indicator</h4>
+        <div class="row">
+            <div class="col-xl-6">
+                <h5>Without BusyText</h5>
+                <RadzenButton style="margin: 0 1rem 1rem 0; width: 150px" IsBusy=@busy Click=@OnBusyClick Text="Save" />
+            </div>
+
+            <div class="col-xl-6">
+                <h5>With Busy Text</h5>
+                <RadzenButton style="margin: 0 1rem 1rem 0; width: 200px" Icon="save" BusyText="Saving ..." IsBusy=@busy Click=@OnBusyClick Text="Save" />
+            </div>
+        </div>
     </div>
     <div class="col-xl-6">
         <EventConsole @ref=@console />
@@ -57,9 +69,17 @@
 
 @code {
     EventConsole console;
+    bool busy;
 
     void OnClick(string buttonName)
     {
         console.Log($"{buttonName} clicked");
+    }
+
+    async Task OnBusyClick()
+    {
+        busy = true;
+        await Task.Delay(2000);
+        busy = false;
     }
 }

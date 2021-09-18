@@ -1,6 +1,7 @@
 ﻿@using Radzen
 @using Microsoft.JSInterop
 @using Microsoft.AspNetCore.Components.Forms
+@using System.Globalization
 @typeparam TValue
 @inherits FormComponent<TValue>
 
@@ -152,10 +153,22 @@
         await InternalValueChanged(args.Value);
     }
 
+    private string RemoveNonNumericCharacters(object value)
+    {
+        string valueStr = value as string;
+        if (valueStr == null)
+        {
+            valueStr = value.ToString();
+        }
+        return new string(valueStr.Where(c => char.IsDigit(c) || char.IsPunctuation(c)).ToArray());
+    }
+
     private async System.Threading.Tasks.Task InternalValueChanged(object value)
     {
         TValue newValue;
-        BindConverter.TryConvertTo<TValue>($"{value}", System.Globalization.CultureInfo.CurrentCulture, out newValue);
+        value = value?.ToString().Replace(',', '.');
+        value = RemoveNonNumericCharacters(value);
+        BindConverter.TryConvertTo<TValue>(value, System.Globalization.CultureInfo.InvariantCulture, out newValue);
 
         decimal? newValueAsDecimal = newValue == null ? default(decimal?) : (decimal)ConvertType.ChangeType(newValue, typeof(decimal));
 
@@ -191,4 +204,30 @@
 
     [Parameter]
     public decimal? Max { get; set; }
+
+    public override async Task SetParametersAsync(ParameterView parameters)
+    {
+        bool minChanged = parameters.DidParameterChange(nameof(Min), Min);
+        bool maxChanged = parameters.DidParameterChange(nameof(Max), Max);
+
+        await base.SetParametersAsync(parameters);
+
+        if (minChanged && Min.HasValue && Value != null && IsJSRuntimeAvailable)
+        {
+            decimal decimalValue = (decimal)Convert.ChangeType(Value, typeof(decimal));
+            if (decimalValue < Min.Value)
+            {
+                await InternalValueChanged(Min.Value);
+            }
+        }
+
+        if (maxChanged && Max.HasValue && Value != null && IsJSRuntimeAvailable)
+        {
+            decimal decimalValue = (decimal)Convert.ChangeType(Value, typeof(decimal));
+            if (decimalValue > Max.Value)
+            {
+                await InternalValueChanged(Max.Value);
+            }
+        }
+    }
 }

@@ -1,0 +1,133 @@
+@typeparam TItem
+<td @attributes="@Attributes" style="@GetStyle()" class="@GetCssClass()" @onclick="@OnClick" @ondblclick="@OnDblClick" >
+    <CascadingValue Value=this>
+        @ChildContent
+    </CascadingValue>
+</td>
+@code {
+    [Parameter(CaptureUnmatchedValues = true)]
+    public IReadOnlyDictionary<string, object> Attributes { get; set; }
+
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+
+    [Parameter]
+    public string CssClass { get; set; }
+
+    [Parameter]
+    public string Style { get; set; }
+
+    [Parameter]
+    public TItem Item { get; set; }
+
+    [Parameter]
+    public RadzenDataGrid<TItem> Grid { get; set; }
+
+    async Task OnClick(MouseEventArgs args)
+    {
+        if (Grid != null)
+        {
+#if NET5
+            await Grid.OnRowClick(new DataGridRowMouseEventArgs<TItem>
+            {
+                Data = Item,
+                AltKey = args.AltKey,
+                Button = args.Button,
+                Buttons = args.Buttons,
+                ClientX = args.ClientX,
+                ClientY = args.ClientY,
+                CtrlKey = args.CtrlKey,
+                Detail = args.Detail,
+                MetaKey = args.MetaKey,
+                OffsetX = args.OffsetX,
+                OffsetY = args.OffsetY,
+                ScreenX = args.ScreenX,
+                ScreenY = args.ScreenY,
+                ShiftKey = args.ShiftKey,
+                Type = args.Type
+            });
+#else
+            await Grid.OnRowClick(new DataGridRowMouseEventArgs<TItem>
+            {
+                Data = Item,
+                AltKey = args.AltKey,
+                Button = args.Button,
+                Buttons = args.Buttons,
+                ClientX = args.ClientX,
+                ClientY = args.ClientY,
+                CtrlKey = args.CtrlKey,
+                Detail = args.Detail,
+                MetaKey = args.MetaKey,
+                ScreenX = args.ScreenX,
+                ScreenY = args.ScreenY,
+                ShiftKey = args.ShiftKey,
+                Type = args.Type
+            });
+#endif
+        }
+    }
+
+    async Task OnDblClick(MouseEventArgs args)
+    {
+        if (Grid != null)
+        {
+#if NET5
+            await Grid.OnRowDblClick(new DataGridRowMouseEventArgs<TItem>
+            {
+                Data = Item,
+                AltKey = args.AltKey,
+                Button = args.Button,
+                Buttons = args.Buttons,
+                ClientX = args.ClientX,
+                ClientY = args.ClientY,
+                CtrlKey = args.CtrlKey,
+                Detail = args.Detail,
+                MetaKey = args.MetaKey,
+                OffsetX = args.OffsetX,
+                OffsetY = args.OffsetY,
+                ScreenX = args.ScreenX,
+                ScreenY = args.ScreenY,
+                ShiftKey = args.ShiftKey,
+                Type = args.Type
+            });
+#else
+            await Grid.OnRowDblClick(new DataGridRowMouseEventArgs<TItem>
+            {
+                Data = Item,
+                AltKey = args.AltKey,
+                Button = args.Button,
+                Buttons = args.Buttons,
+                ClientX = args.ClientX,
+                ClientY = args.ClientY,
+                CtrlKey = args.CtrlKey,
+                Detail = args.Detail,
+                MetaKey = args.MetaKey,
+                ScreenX = args.ScreenX,
+                ScreenY = args.ScreenY,
+                ShiftKey = args.ShiftKey,
+                Type = args.Type
+            });
+#endif
+        }
+    }
+
+    string GetCssClass()
+    {
+        if (Attributes != null && Attributes.TryGetValue("class", out var @class) && !string.IsNullOrEmpty(Convert.ToString(@class)))
+        {
+            return $"{CssClass} {@class}".Trim();
+        }
+
+        return String.IsNullOrWhiteSpace(CssClass) ? null : CssClass;
+    }
+
+    string GetStyle()
+    {
+        if (Attributes != null && Attributes.TryGetValue("style", out var style) == true && !string.IsNullOrEmpty(Convert.ToString(style)))
+        {
+            return String.IsNullOrEmpty(Style) ? $"{style}" : $"{Style.TrimEnd(';')};{style}";
+        }
+
+        return Style;
+    }
+}

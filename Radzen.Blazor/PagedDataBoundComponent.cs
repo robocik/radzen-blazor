@@ -49,6 +49,9 @@ namespace Radzen
             }
         }
 
+        [Parameter]
+        public IEnumerable<int> PageSizeOptions { get; set; }
+
         protected IQueryable<T> _view = null;
         public virtual IQueryable<T> PagedView
         {
@@ -97,6 +100,18 @@ namespace Radzen
 
         }
 
+        public override async Task SetParametersAsync(ParameterView parameters)
+        {
+            bool pageSizeChanged = parameters.DidParameterChange(nameof(PageSize), PageSize);
+
+            await base.SetParametersAsync(parameters);
+
+            if (pageSizeChanged && !firstRender)
+            {
+               await InvokeAsync(Reload);
+            }
+        }
+
         protected override Task OnParametersSetAsync()
         {
             if (Visible && !LoadData.HasDelegate)
@@ -111,8 +126,10 @@ namespace Radzen
             return base.OnParametersSetAsync();
         }
 
+        bool firstRender = true;
         protected override Task OnAfterRenderAsync(bool firstRender)
         {
+            this.firstRender = firstRender;
             if (firstRender && Visible && (LoadData.HasDelegate && Data == null))
             {
                 InvokeAsync(Reload);
@@ -131,6 +148,12 @@ namespace Radzen
         {
             skip = args.Skip;
             CurrentPage = args.PageIndex;
+            await InvokeAsync(Reload);
+        }
+
+        protected async Task OnPageSizeChanged(int value)
+        {
+            PageSize = value;
             await InvokeAsync(Reload);
         }
 

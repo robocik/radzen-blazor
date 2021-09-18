@@ -3,7 +3,7 @@
 @if (Visible)
 {
     <fieldset @ref="@Element" @attributes="Attributes" class="@GetCssClass()" style="@Style" id="@GetId()">
-        <legend class="rz-fieldset-legend" style="white-space:nowrap">
+        <legend class="rz-fieldset-legend @HeaderCssClass" style="white-space:nowrap">
 
             @if (AllowCollapse)
             {
@@ -46,6 +46,14 @@
                 @ChildContent
             </div>
         </div>
+        @if (SummaryTemplate != null)
+        {
+            <div class="rz-fieldset-content-wrapper" role="region" aria-hidden="false" style="@summaryContentStyle">
+                <div class="rz-fieldset-content rz-fieldset-content-summary">
+                    @SummaryTemplate
+                </div>
+            </div>
+        }
     </fieldset>
 }
 @code {
@@ -53,6 +61,9 @@
     {
         return AllowCollapse ? "rz-fieldset rz-fieldset-toggleable" : "rz-fieldset";
     }
+
+    [Parameter]
+    public string HeaderCssClass { get; set; }
 
     [Parameter]
     public bool AllowCollapse { get; set; }
@@ -74,17 +85,22 @@
     public RenderFragment ChildContent { get; set; }
 
     [Parameter]
+    public RenderFragment SummaryTemplate { get; set; } = null;
+
+    [Parameter]
     public EventCallback Expand { get; set; }
 
     [Parameter]
     public EventCallback Collapse { get; set; }
 
     string contentStyle = "";
+    string summaryContentStyle = "display: none";
 
     async System.Threading.Tasks.Task Toggle(EventArgs args)
     {
         collapsed = !collapsed;
         contentStyle = collapsed ? "display: none;" : "";
+        summaryContentStyle = !collapsed ? "display: none" : "";
 
         if (collapsed)
         {
@@ -116,6 +132,7 @@
     protected override Task OnParametersSetAsync()
     {
         contentStyle = collapsed ? "display: none;" : "";
+        summaryContentStyle = !collapsed ? "display: none" : "";
 
         return base.OnParametersSetAsync();
     }
