@@ -1,38 +1,38 @@
 <div class="rz-dialog-wrapper">
-    <div class="modal fade show d-block" id="exampleModal" role="dialog" aria-labelledby="rz-dialog-0-label" >
+    <div class="modal fade show d-block" id="exampleModal" role="dialog" aria-labelledby="rz-dialog-0-label">
         <div class="modal-dialog modal-dialog-scrollable" role="document" id="wide" style=@Style>
             <div class="modal-content">
-            @if (Dialog.Options.ShowTitle)
-            {
-                <div class="modal-header">
-                    <span class="rz-dialog-title" id="rz-dialog-0-label">@Dialog.Title</span>
-                    @if (Dialog.Options.ShowClose)
+                @if (Dialog.Options.ShowTitle)
+                {
+                    <div class="modal-header">
+                        <span class="rz-dialog-title" id="rz-dialog-0-label">@Dialog.Title</span>
+                        @if (Dialog.Options.ShowClose)
+                        {
+                            <a href="javascript:void(0)" @onclick="@Close" role="button" class="rz-dialog-titlebar-icon rz-dialog-titlebar-close ">
+                                <span class="rzi rzi-times"></span>
+                            </a>
+                        }
+                    </div>
+                    @*<div class="rz-dialog-titlebar">
+                            <span class="rz-dialog-title" id="rz-dialog-0-label">@Dialog.Title</span>
+                            @if (Dialog.Options.ShowClose)
+                            {
+                                <a href="javascript:void(0)" @onclick=@Close role="button" class="rz-dialog-titlebar-icon rz-dialog-titlebar-close">
+                                    <span class="rzi rzi-times"></span>
+                                </a>
+                            }
+                        </div>*@
+                }
+                <div class="rz-dialog-content">
+                    @if (Dialog.Options.ChildContent != null)
                     {
-                        <a href="javascript:void(0)" @onclick="@Close" role="button" class="rz-dialog-titlebar-icon rz-dialog-titlebar-close ">
-                            <span class="rzi rzi-times"></span>
-                        </a>
+                        @Dialog.Options.ChildContent(Service)
+                    }
+                    else
+                    {
+                        @ChildContent
                     }
                 </div>
-                @*<div class="rz-dialog-titlebar">
-                    <span class="rz-dialog-title" id="rz-dialog-0-label">@Dialog.Title</span>
-                    @if (Dialog.Options.ShowClose)
-                    {
-                        <a href="javascript:void(0)" @onclick=@Close role="button" class="rz-dialog-titlebar-icon rz-dialog-titlebar-close">
-                            <span class="rzi rzi-times"></span>
-                        </a>
-                    }
-                </div>*@
-            }
-            <div class="rz-dialog-content">
-                @if (Dialog.Options.ChildContent != null)
-                {
-                    @Dialog.Options.ChildContent(Service)
-                }
-                else
-                {
-                    @ChildContent
-                }
-            </div>
             </div>
         </div>
     </div>
@@ -77,6 +77,6 @@
         }
     }
 
-    [Inject] 
+    [Inject]
     DialogService Service { get; set; }
 }

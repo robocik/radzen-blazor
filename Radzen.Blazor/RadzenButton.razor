@@ -102,5 +102,7 @@
     protected override string GetComponentCssClass()
     {
         return $"btn btn-{getButtonSize()} btn-{Enum.GetName(typeof(ButtonStyle), ButtonStyle).ToLower()}";
+
+        //return $"rz-button rz-button-{getButtonSize()} btn-{Enum.GetName(typeof(ButtonStyle), ButtonStyle).ToLower()}{(IsDisabled ? " rz-state-disabled" : //"")}{(string.IsNullOrEmpty(Text) && !string.IsNullOrEmpty(Icon) ? " rz-button-icon-only" : "")}";
     }
 }
