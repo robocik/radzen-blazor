@@ -8,29 +8,68 @@ using Radzen.Blazor;
 
 namespace Radzen
 {
+    /// <summary>
+    /// Base classes of components that support paging.
+    /// </summary>
+    /// <typeparam name="T">The type of the data item</typeparam>
     public class PagedDataBoundComponent<T> : RadzenComponent
     {
+        /// <summary>
+        /// Gets or sets the pager position. Set to <c>PagerPosition.Bottom</c> by default.
+        /// </summary>
+        /// <value>The pager position.</value>
         [Parameter]
         public PagerPosition PagerPosition { get; set; } = PagerPosition.Bottom;
 
+        /// <summary>
+        /// Gets or sets a value indicating whether paging is allowed. Set to <c>false</c> by default.
+        /// </summary>
+        /// <value><c>true</c> if paging is allowed; otherwise, <c>false</c>.</value>
         [Parameter]
         public bool AllowPaging { get; set; }
 
+        /// <summary>
+        /// Gets or sets the size of the page.
+        /// </summary>
+        /// <value>The size of the page.</value>
         [Parameter]
         public int PageSize { get; set; } = 10;
 
+        /// <summary>
+        /// Gets or sets the page numbers count.
+        /// </summary>
+        /// <value>The page numbers count.</value>
         [Parameter]
         public int PageNumbersCount { get; set; } = 5;
 
+        /// <summary>
+        /// Gets or sets the count.
+        /// </summary>
+        /// <value>The count.</value>
         [Parameter]
         public int Count { get; set; }
+        /// <summary>
+        /// Gets or sets the current page.
+        /// </summary>
+        /// <value>The current page.</value>
         public int CurrentPage { get; set; }
 
+        /// <summary>
+        /// Gets or sets the template.
+        /// </summary>
+        /// <value>The template.</value>
         [Parameter]
         public RenderFragment<T> Template { get; set; }
 
+        /// <summary>
+        /// The data
+        /// </summary>
         IEnumerable<T> _data;
 
+        /// <summary>
+        /// Gets or sets the data.
+        /// </summary>
+        /// <value>The data.</value>
         [Parameter]
         public IEnumerable<T> Data
         {
@@ -49,10 +88,35 @@ namespace Radzen
             }
         }
 
+        /// <summary>
+        /// Gets or sets the page size options.
+        /// </summary>
+        /// <value>The page size options.</value>
         [Parameter]
         public IEnumerable<int> PageSizeOptions { get; set; }
+        
+        /// <summary>
+        /// Gets or sets the pager summary visibility.
+        /// </summary>
+        /// <value>The pager summary visibility.</value>
+        [Parameter]
+        public bool ShowPagingSummary { get; set; } = false;
 
+        /// <summary>
+        /// Gets or sets the pager summary format.
+        /// </summary>
+        /// <value>The pager summary format.</value>
+        [Parameter]
+        public string PagingSummaryFormat { get; set; } = "Page {0} of {1} ({2} items)";
+
+        /// <summary>
+        /// The view
+        /// </summary>
         protected IQueryable<T> _view = null;
+        /// <summary>
+        /// Gets the paged view.
+        /// </summary>
+        /// <value>The paged view.</value>
         public virtual IQueryable<T> PagedView
         {
             get
@@ -65,6 +129,10 @@ namespace Radzen
             }
         }
 
+        /// <summary>
+        /// Gets the view.
+        /// </summary>
+        /// <value>The view.</value>
         public virtual IQueryable<T> View
         {
             get
@@ -73,9 +141,16 @@ namespace Radzen
             }
         }
 
+        /// <summary>
+        /// Gets or sets the load data.
+        /// </summary>
+        /// <value>The load data.</value>
         [Parameter]
         public EventCallback<Radzen.LoadDataArgs> LoadData { get; set; }
 
+        /// <summary>
+        /// Reloads this instance.
+        /// </summary>
         public async virtual Task Reload()
         {
             _view = null;
@@ -95,11 +170,19 @@ namespace Radzen
             }
         }
 
+        /// <summary>
+        /// Called when [data changed].
+        /// </summary>
         protected virtual void OnDataChanged()
         {
 
         }
 
+        /// <summary>
+        /// Set parameters as an asynchronous operation.
+        /// </summary>
+        /// <param name="parameters">The parameters.</param>
+        /// <returns>A Task representing the asynchronous operation.</returns>
         public override async Task SetParametersAsync(ParameterView parameters)
         {
             bool pageSizeChanged = parameters.DidParameterChange(nameof(PageSize), PageSize);
@@ -112,6 +195,10 @@ namespace Radzen
             }
         }
 
+        /// <summary>
+        /// Called when [parameters set asynchronous].
+        /// </summary>
+        /// <returns>Task.</returns>
         protected override Task OnParametersSetAsync()
         {
             if (Visible && !LoadData.HasDelegate)
@@ -126,7 +213,15 @@ namespace Radzen
             return base.OnParametersSetAsync();
         }
 
+        /// <summary>
+        /// The first render
+        /// </summary>
         bool firstRender = true;
+        /// <summary>
+        /// Called when [after render asynchronous].
+        /// </summary>
+        /// <param name="firstRender">if set to <c>true</c> [first render].</param>
+        /// <returns>Task.</returns>
         protected override Task OnAfterRenderAsync(bool firstRender)
         {
             this.firstRender = firstRender;
@@ -139,11 +234,24 @@ namespace Radzen
             return base.OnAfterRenderAsync(firstRender);
         }
 
+        /// <summary>
+        /// The skip
+        /// </summary>
         protected int skip;
 
+        /// <summary>
+        /// The top pager
+        /// </summary>
         protected RadzenPager topPager;
+        /// <summary>
+        /// The bottom pager
+        /// </summary>
         protected RadzenPager bottomPager;
 
+        /// <summary>
+        /// Handles the <see cref="E:PageChanged" /> event.
+        /// </summary>
+        /// <param name="args">The <see cref="PagerEventArgs"/> instance containing the event data.</param>
         protected async Task OnPageChanged(PagerEventArgs args)
         {
             skip = args.Skip;
@@ -151,12 +259,19 @@ namespace Radzen
             await InvokeAsync(Reload);
         }
 
+        /// <summary>
+        /// Called when [page size changed].
+        /// </summary>
+        /// <param name="value">The value.</param>
         protected async Task OnPageSizeChanged(int value)
         {
             PageSize = value;
             await InvokeAsync(Reload);
         }
 
+        /// <summary>
+        /// Calculates the pager.
+        /// </summary>
         protected void CalculatePager()
         {
             if (topPager != null)
@@ -172,6 +287,10 @@ namespace Radzen
             }
         }
 
+        /// <summary>
+        /// Goes to page.
+        /// </summary>
+        /// <param name="page">The page.</param>
         public async Task GoToPage(int page)
         {
             if (topPager != null)
@@ -185,6 +304,10 @@ namespace Radzen
             }
         }
 
+        /// <summary>
+        /// Firsts the page.
+        /// </summary>
+        /// <param name="forceReload">if set to <c>true</c> [force reload].</param>
         public async Task FirstPage(bool forceReload = false)
         {
             if (topPager != null)
@@ -198,6 +321,9 @@ namespace Radzen
             }
         }
 
+        /// <summary>
+        /// Previouses the page.
+        /// </summary>
         public async Task PrevPage()
         {
             if (topPager != null)
@@ -211,6 +337,9 @@ namespace Radzen
             }
         }
 
+        /// <summary>
+        /// Nexts the page.
+        /// </summary>
         public async Task NextPage()
         {
             if (topPager != null)
@@ -224,6 +353,9 @@ namespace Radzen
             }
         }
 
+        /// <summary>
+        /// Lasts the page.
+        /// </summary>
         public async Task LastPage()
         {
             if (topPager != null)

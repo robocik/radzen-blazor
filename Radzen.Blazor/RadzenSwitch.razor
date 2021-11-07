@@ -11,32 +11,3 @@
         <input class="form-check-input" type="checkbox" name="@Name" value="@Value" disabled="@Disabled" >
     </div>
 }
-@code {
-    protected override string GetComponentCssClass()
-    {
-        var fieldCssClass = FieldIdentifier.FieldName != null ? EditContext?.FieldCssClass(FieldIdentifier) : "";
-        return $"rz-switch {(Value ? " rz-switch-checked " : "")} {fieldCssClass}";
-    }
-
-    [Parameter]
-    public virtual string CssClass { get; set; }
-
-    public async Task OnMouseUp(MouseEventArgs args)
-    {
-        await Toggle();
-    }
-
-    async System.Threading.Tasks.Task Toggle()
-    {
-        if (Disabled)
-        {
-            return;
-        }
-
-        Value = !Value;
-
-        await ValueChanged.InvokeAsync(Value);
-        if (FieldIdentifier.FieldName != null) { EditContext?.NotifyFieldChanged(FieldIdentifier); }
-        await Change.InvokeAsync(Value);
-    }
-}

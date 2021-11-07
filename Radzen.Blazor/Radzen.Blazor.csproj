@@ -8,7 +8,7 @@
     <IsPackable>true</IsPackable>
     <PackageId>Radzen.Blazor.easyRenti</PackageId>
     <Product>Radzen.Blazor</Product>
-    <Version>3.9.10</Version>
+    <Version>3.11.12</Version>
     <Copyright>Radzen Ltd.</Copyright>
     <Authors>Radzen Ltd.</Authors>
     <Description>Native Blazor UI components by Radzen Ltd.</Description>
@@ -18,11 +18,7 @@
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <Title>Radzen Components for Blazor</Title>
     <RepositoryUrl>https://github.com/radzenhq/radzen-blazor</RepositoryUrl>
-    <RunPostBuildEvent>Always</RunPostBuildEvent>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net5.0'">
-    <DefineConstants>NET5</DefineConstants>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TargetFramework)' == 'net5.0'">
     <DefineConstants>NET5</DefineConstants>

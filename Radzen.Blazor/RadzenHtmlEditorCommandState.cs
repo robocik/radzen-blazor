@@ -17,7 +17,7 @@ namespace Radzen.Blazor
         public string FontName { get; set; }
         public string FontSize { get; set; }
         public string FormatBlock { get; set; }
-        public bool Unlink { get; set;  }
+        public bool Unlink { get; set; }
         public string Html { get; set; }
     }
 }

@@ -280,7 +280,13 @@ window.Radzen = {
           : e.pageX - handle.getBoundingClientRect().left;
       var percent = (handle.offsetLeft + offsetX) / parent.offsetWidth;
 
-      var newValue = percent * max;
+      if (percent > 1) {
+          percent = 1;
+      } else if (percent < 0) {
+          percent = 0;
+      }
+
+      var newValue = percent * (max - min) + min;
       var oldValue = range ? value[slider.isMin ? 0 : 1] : value;
 
       if (
@@ -326,7 +332,7 @@ window.Radzen = {
 
     document.addEventListener('mousemove', Radzen[id].mouseMoveHandler);
     document.addEventListener('touchmove', Radzen[id].mouseMoveHandler, {
-      passive: true
+      passive: false, capture: true
     });
 
     document.addEventListener('mouseup', Radzen[id].mouseUpHandler);
@@ -653,9 +659,10 @@ window.Radzen = {
     var top = y ? y : parentRect.bottom;
     var left = x ? x : parentRect.left;
 
-    if (syncWidth) {
+      if (syncWidth) {
         popup.style.width = parentRect.width + 'px';
         if (!popup.style.minWidth) {
+            popup.minWidth = true;
             popup.style.minWidth = parentRect.width + 'px';
         }
     } 
@@ -725,6 +732,10 @@ window.Radzen = {
     }
 
     Radzen[id] = function (e) {
+        if (!/Android/i.test(navigator.userAgent) && e.type == 'resize') {
+            Radzen.closePopup(id, instance, callback);
+            return;
+        }
         if (!e.defaultPrevented) {
           if (parent) {
             if (e.type == 'click' && !parent.contains(e.target) && !popup.contains(e.target)) {
@@ -754,6 +765,8 @@ window.Radzen = {
     document.body.appendChild(popup);
     document.removeEventListener('click', Radzen[id]);
     document.addEventListener('click', Radzen[id]);
+    window.removeEventListener('resize', Radzen[id]);
+    window.addEventListener('resize', Radzen[id]);
 
     var p = parent;
     while (p && p != document.body) {
@@ -775,16 +788,19 @@ window.Radzen = {
     if (popup.style.display == 'none') return;
 
     if (popup) {
+      if (popup.minWidth) {
+          popup.style.minWidth = '';
+      }
       popup.style.display = 'none';
     }
     document.removeEventListener('click', Radzen[id]);
+    window.removeEventListener('resize', Radzen[id]);
     Radzen[id] = null;
 
     if (instance) {
       instance.invokeMethodAsync(callback);
     }
 
-    //if (Radzen.activeElement) {
     if (Radzen.activeElement && Radzen.activeElement == document.activeElement || Radzen.activeElement && document.activeElement == document.body) {
         Radzen.activeElement.focus();
         Radzen.activeElement = null;
@@ -896,70 +912,54 @@ window.Radzen = {
 
     return readAsDataURL(fileInput);
   },
-  closeMenuItems: function (event) {
-    var menu = event.target.closest('.rz-menu');
-
-    if (!menu) {
-      var targets = document.querySelectorAll(
-        '.rz-navigation-item-wrapper-active'
-      );
-
-      if (targets) {
-        for (var i = 0; i < targets.length; i++) {
-          Radzen.toggleMenuItem(targets[i], false);
-        }
-      }
-      document.removeEventListener('click', Radzen.closeMenuItems);
-    }
-  },
-  closeOtherMenuItems: function (current) {
-    var targets = document.querySelectorAll('.rz-menu .rz-navigation-item-wrapper-active');
-    if (targets) {
-      for (var i = 0; i < targets.length; i++) {
-        var target = targets[i];
-        var item = target.closest('.rz-navigation-item');
-
-        if (!current || !item.contains(current)) {
-          Radzen.toggleMenuItem(target, false);
-        }
-      }
-    }
-  },
-  toggleMenuItem: function (target, selected) {
-    Radzen.closeOtherMenuItems(target);
-
+  toggleMenuItem: function (target, event) {
     var item = target.closest('.rz-navigation-item');
 
-    if (selected === undefined) {
-      selected = !item.classList.contains('rz-navigation-item-active');
+    var active = !item.classList.contains('rz-navigation-item-active');
+
+    function toggle(active) {
+      item.classList.toggle('rz-navigation-item-active', active);
+
+      target.classList.toggle('rz-navigation-item-wrapper-active', active);
+
+      var children = item.querySelector('.rz-navigation-menu');
+
+      if (children) {
+        children.style.display = active ? '' : 'none';
+      }
+
+      var icon = item.querySelector('.rz-navigation-item-icon-children');
+
+      if (icon) {
+        var deg = active ? '180deg' : 0;
+        icon.style.transform = 'rotate(' + deg + ')';
+      }
     }
 
-    item.classList.toggle('rz-navigation-item-active', selected);
+    toggle(active);
 
-    target.classList.toggle('rz-navigation-item-wrapper-active', selected);
+    document.removeEventListener('click', target.clickHandler);
 
-    var children = item.querySelector('.rz-navigation-menu');
-
-    if (children) {
-      children.style.display = selected ? '' : 'none';
-    } else if (selected) {
-      Radzen.closeOtherMenuItems(null);
+    target.clickHandler = function (event) {
+      if (item.contains(event.target)) {
+        var child = event.target.closest('.rz-navigation-item');
+        if (child && child.querySelector('.rz-navigation-menu')) {
+          return;
+        }
+      }
+      toggle(false);
     }
 
-    var icon = item.querySelector('.rz-navigation-item-icon-children');
-
-    if (icon) {
-      var deg = selected ? '180deg' : 0;
-      icon.style.transform = 'rotate(' + deg + ')';
-    }
-
-    document.removeEventListener('click', Radzen.closeMenuItems);
-    document.addEventListener('click', Radzen.closeMenuItems);
+    document.addEventListener('click', target.clickHandler);
   },
   destroyChart: function (ref) {
     if (ref.mouseMoveHandler) {
       ref.removeEventListener('mousemove', ref.mouseMoveHandler);
       delete ref.mouseMoveHandler;
+    }
+    if (ref.clickHandler) {
+      ref.removeEventListener('click', ref.clickHandler);
+      delete ref.clickHandler;
     }
 
     this.destroyResizable(ref);
@@ -1002,8 +1002,15 @@ window.Radzen = {
       var y = e.clientY - rect.top;
       instance.invokeMethodAsync('MouseMove', x, y);
     };
+    ref.clickHandler = function (e) {
+      var rect = ref.getBoundingClientRect();
+      var x = e.clientX - rect.left;
+      var y = e.clientY - rect.top;
+      instance.invokeMethodAsync('Click', x, y);
+    };
 
     ref.addEventListener('mousemove', ref.mouseMoveHandler);
+    ref.addEventListener('click', ref.clickHandler);
 
     return this.createResizable(ref, instance);
   },

@@ -1,10 +1,9 @@
 @using Microsoft.AspNetCore.Components.Forms
 @typeparam TItem
 @implements IRadzenForm
-@implements IDisposable
 @{var rowArgs = Grid?.RowAttributes(Item); }
 <tr class="@(Grid.RowStyle(Item, Index))" @attributes="@rowArgs.Item2">
-    @foreach(var g in Grid.groups)
+    @foreach (var g in Grid.groups)
     {
         <td class="rz-col-icon">
             <span class="rz-column-title"></span>
@@ -23,64 +22,64 @@
         </td>
     }
     <CascadingValue Value=@EditContext>
-    <CascadingValue Value=this>
-        @for (var j = 0; j < Columns.Count; j++)
-        {
-            if (Grid.rowSpans.ContainsKey(j))
+        <CascadingValue Value=this>
+            @for (var j = 0; j < Columns.Count; j++)
             {
-                Grid.rowSpans[j] = Grid.rowSpans[j] - 1;
-
-                if (Grid.rowSpans[j] <= 0)
+                if (Grid.rowSpans.ContainsKey(j))
                 {
-                    Grid.rowSpans.Remove(j);
-                }
-                else
-                {
-                    continue;
-                }
-            }
+                    Grid.rowSpans[j] = Grid.rowSpans[j] - 1;
 
-            var column = Columns[j];
-            var cellAttr = Grid.CellAttributes(Item, column);
-
-            object colspan;
-            cellAttr.TryGetValue("colspan", out colspan);
-
-            if (colspan != null)
-            {
-                j = j + (int)Convert.ChangeType(colspan, TypeCode.Int32) - 1;
-            }
-
-            object rowspan;
-            cellAttr.TryGetValue("rowspan", out rowspan);
-
-            if (rowspan != null)
-            {
-                Grid.rowSpans.Add(j, (int)Convert.ChangeType(rowspan, TypeCode.Int32));
-            }
-
-            <RadzenDataGridCell Grid="@this.Grid" Item="@Item"
-                                Style="@column.GetStyle(true)" CssClass="@(column.CssClass + " " + Grid.getFrozenColumnClass(column, Columns))" Attributes="@(cellAttr)">
-                <span class="rz-cell-data" title="@(column.Template == null ? column.GetValue(Item) : "")">
-                    @if (Item != null)
+                    if (Grid.rowSpans[j] <= 0)
                     {
-                        @if (Grid.IsRowInEditMode(Item) && column.EditTemplate != null)
-                        {
-                            @column.EditTemplate(Item)
-                        } 
-                        else if (column.Template != null)
-                        {
-                            @column.Template(Item)
-                        }
-                        else
-                        {
-                            @column.GetValue(Item)
-                        }
+                        Grid.rowSpans.Remove(j);
                     }
-                </span>
-            </RadzenDataGridCell>
-        }
-    </CascadingValue>
+                    else
+                    {
+                        continue;
+                    }
+                }
+
+                var column = Columns[j];
+                var cellAttr = Grid.CellAttributes(Item, column);
+
+                object colspan;
+                cellAttr.TryGetValue("colspan", out colspan);
+
+                if (colspan != null)
+                {
+                    j = j + (int)Convert.ChangeType(colspan, TypeCode.Int32) - 1;
+                }
+
+                object rowspan;
+                cellAttr.TryGetValue("rowspan", out rowspan);
+
+                if (rowspan != null)
+                {
+                    Grid.rowSpans.Add(j, (int)Convert.ChangeType(rowspan, TypeCode.Int32));
+                }
+
+                <RadzenDataGridCell Grid="@this.Grid" Item="@Item" Column="@column"
+                                    Style="@column.GetStyle(true)" CssClass="@(column.CssClass + " " + Grid.getFrozenColumnClass(column, Columns))" Attributes="@(cellAttr)">
+                    <span class="rz-cell-data" title="@(column.Template == null ? column.GetValue(Item) : "")">
+                        @if (Item != null)
+                        {
+                            @if (Grid.IsRowInEditMode(Item) && column.EditTemplate != null)
+                            {
+                                @column.EditTemplate(Item)
+                            }
+                            else if (column.Template != null)
+                            {
+                                @column.Template(Item)
+                            }
+                            else
+                            {
+                                @column.GetValue(Item)
+                            }
+                        }
+                    </span>
+                </RadzenDataGridCell>
+            }
+        </CascadingValue>
     </CascadingValue>
 </tr>
 @if (Grid.Template != null && Grid.expandedItems.Keys.Contains(Item))
@@ -94,49 +93,49 @@
     </tr>
 }
 @code {
-        [Parameter]
-        public IList<RadzenDataGridColumn<TItem>> Columns { get; set; }
+    [Parameter]
+    public IList<RadzenDataGridColumn<TItem>> Columns { get; set; }
 
-        [Parameter]
-        public TItem Item { get; set; }
+    [Parameter]
+    public TItem Item { get; set; }
 
-        [Parameter]
-        public int Index { get; set; }
+    [Parameter]
+    public int Index { get; set; }
 
-        [Parameter]
-        public RadzenDataGrid<TItem> Grid { get; set; }
+    [Parameter]
+    public RadzenDataGrid<TItem> Grid { get; set; }
 
-        [Parameter(CaptureUnmatchedValues = true)]
-        public IReadOnlyDictionary<string, object> Attributes { get; set; }
+    [Parameter(CaptureUnmatchedValues = true)]
+    public IReadOnlyDictionary<string, object> Attributes { get; set; }
 
-        [Parameter]
-        public RenderFragment ChildContent { get; set; }
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
 
-        [Parameter]
-        public string CssClass { get; set; }
+    [Parameter]
+    public string CssClass { get; set; }
 
-        [Parameter]
-        public bool InEditMode { get; set; }
+    [Parameter]
+    public bool InEditMode { get; set; }
 
-        [Parameter]
-        public EditContext EditContext { get; set; }
+    [Parameter]
+    public EditContext EditContext { get; set; }
 
-        List<IRadzenFormComponent> components;
+    List<IRadzenFormComponent> components;
 
-        public void AddComponent(IRadzenFormComponent component)
+    public void AddComponent(IRadzenFormComponent component)
+    {
+        if (components != null)
         {
-            if (components != null)
+            if (components.IndexOf(component) == -1)
             {
-                if (components.IndexOf(component) == -1)
-                {
-                    components.Add(component);
-                }
+                components.Add(component);
             }
         }
-        public void RemoveComponent(IRadzenFormComponent component)
-        {
-            components?.Remove(component);
-        }
+    }
+    public void RemoveComponent(IRadzenFormComponent component)
+    {
+        components?.Remove(component);
+    }
 
     public override Task SetParametersAsync(ParameterView parameters)
     {
@@ -151,21 +150,5 @@
     public IRadzenFormComponent FindComponent(string name)
     {
         return components.Where(component => component.Name == name).FirstOrDefault();
-    }
-
-    protected override void OnInitialized()
-    {
-        if (Grid.IsVirtualizationAllowed() && Item != null)
-        {
-            Index = Grid.GetItemIndex(Item);
-        }
-    }
-
-    public void Dispose()
-    {
-        if (Grid.IsVirtualizationAllowed() && Item != null)
-        {
-            Grid?.RemoveItem(Item);
-        }
     }
 }

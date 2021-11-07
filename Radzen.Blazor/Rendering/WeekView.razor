@@ -1,5 +1,4 @@
 @using Radzen.Blazor
-@using Radzen.Blazor.Rendering
 
 <div class="rz-view rz-week-view">
     <div class="rz-view-header">
@@ -7,12 +6,12 @@
     @for (var day = StartDate; day < EndDate; day = day.AddDays(1))
     {
         <div class="rz-slot-header">
-            @day.ToString("ddd")
+            @day.ToString("ddd", Scheduler.Culture)
         </div>
     }
     </div>
     <div class="rz-view-content">
-        <Hours Start=@StartTime End=@EndTime />
+        <Hours Start=@StartTime End=@EndTime TimeFormat="@TimeFormat" />
         <div class="rz-week-view-content">
         @for (var day = StartDate; day < EndDate; day = day.AddDays(1))
         {
@@ -23,15 +22,7 @@
                 @for (var date = start; date < end; date = date.AddMinutes(30))
                 {
                     var slotDate = date;
-
-                    @if (date.Minute == 30)
-                    {
-                        <div class="rz-slot rz-slot-minor" @onclick=@(args => OnSlotClick(slotDate))></div>
-                    }
-                    else
-                    {
-                        <div class="rz-slot" @onclick=@(args => OnSlotClick(slotDate))></div>
-                    }
+                    <div @onclick=@(args => OnSlotClick(slotDate)) @attributes=@Attributes(date)></div>
                 }
             </div>
         }
@@ -52,6 +43,9 @@
     public TimeSpan EndTime { get; set; }
 
     [Parameter]
+    public string TimeFormat { get; set; }
+
+    [Parameter]
     public IList<AppointmentData> Appointments { get; set; }
 
     [CascadingParameter]
@@ -60,5 +54,12 @@
     async Task OnSlotClick(DateTime date)
     {
         await Scheduler.SelectSlot(date, date.AddMinutes(30));
+    }
+
+    IDictionary<string, object> Attributes(DateTime date)
+    {
+        var attributes = Scheduler.GetSlotAttributes(date, date.AddMinutes(30));
+        attributes["class"] = ClassList.Create("rz-slot").Add("rz-slot-minor", date.Minute == 30).Add(attributes).ToString();
+        return attributes;
     }
 }

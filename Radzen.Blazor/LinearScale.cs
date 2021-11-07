@@ -65,7 +65,7 @@ namespace Radzen.Blazor
             if (start == end)
             {
                 start = 0;
-                end = end + NiceNumber(end/ticks, false);
+                end = end + NiceNumber(end / ticks, false);
             }
 
             var range = end - start;

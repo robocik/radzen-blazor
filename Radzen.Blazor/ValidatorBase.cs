@@ -6,29 +6,55 @@ using Microsoft.AspNetCore.Components.Forms;
 
 namespace Radzen.Blazor
 {
+    /// <summary>
+    /// Base class of Radzen validator components.
+    /// </summary>
     public abstract class ValidatorBase : RadzenComponent, IRadzenFormValidator
     {
+        /// <summary>
+        /// Gets or sets the form which contains this validator.
+        /// </summary>
         [CascadingParameter]
         public IRadzenForm Form { get; set; }
 
+        /// <summary>
+        /// Specifies the component which this validator should validate. Must be set to the <see cref="IRadzenFormComponent.Name" /> of an existing component.
+        /// </summary>
         [Parameter]
         public string Component { get; set; }
 
+        /// <summary>
+        /// Specifies the message displayed when the validator is invalid.
+        /// </summary>
         [Parameter]
         public abstract string Text { get; set; }
 
+        /// <summary>
+        /// Determines if the validator is displayed as a popup or not. Set to <c>false</c> by default.
+        /// </summary>
         [Parameter]
         public bool Popup { get; set; }
 
+        /// <summary>
+        /// Returns the valididity status.
+        /// </summary>
+        /// <value><c>true</c> if this valiidator is valid; otherwise, <c>false</c>.</value>
         public bool IsValid { get; protected set; } = true;
 
+        /// <summary>
+        /// Provided by the <see cref="RadzenTemplateForm{TItem}" /> which contains this validator. Used internally.
+        /// </summary>
+        /// <value>The edit context.</value>
         [CascadingParameter]
         public EditContext EditContext { get; set; }
 
+        /// <summary>
+        /// Stores the validation messages.
+        /// </summary>
         protected ValidationMessageStore messages;
-
         private FieldIdentifier FieldIdentifier { get; set; }
 
+        /// <inheritdoc />
         public override async Task SetParametersAsync(ParameterView parameters)
         {
             await base.SetParametersAsync(parameters);
@@ -103,11 +129,17 @@ namespace Radzen.Blazor
             FieldIdentifier = component.FieldIdentifier;
         }
 
+        /// <inheritdoc />
         protected override string GetComponentCssClass()
         {
             return $"rz-message rz-messages-error {(Popup ? "rz-message-popup" : "")}";
         }
 
+        /// <summary>
+        /// Runs validation against the specified component.
+        /// </summary>
+        /// <param name="component">The component to validate.</param>
+        /// <returns><c>true</c> if validation is successful, <c>false</c> otherwise.</returns>
         protected abstract bool Validate(IRadzenFormComponent component);
 
         private void ValidationStateChanged(object sender, ValidationStateChangedEventArgs e)
@@ -115,6 +147,7 @@ namespace Radzen.Blazor
             StateHasChanged();
         }
 
+        /// <inheritdoc />
         public override void Dispose()
         {
             base.Dispose();
@@ -122,6 +155,7 @@ namespace Radzen.Blazor
             RemoveFromEditContext();
         }
 
+        /// <inheritdoc />
         protected override void BuildRenderTree(RenderTreeBuilder builder)
         {
             if (Visible && !IsValid)
