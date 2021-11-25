@@ -52,8 +52,7 @@
                 {
                     <col>
                 }
-
-                @if (Template != null)
+                @if (Template != null && ShowExpandColumn)
                 {
                     <col>
                 }
@@ -70,8 +69,7 @@
                             <span class="rz-column-title"></span>
                         </th>
                     }
-
-                    @if (Template != null)
+                    @if (Template != null && ShowExpandColumn)
                     {
                         <th class="rz-col-icon rz-unselectable-text" scope="col">
                             <span class="rz-column-title"></span>
@@ -203,7 +201,7 @@
                                 <span class="rz-column-title"></span>
                             </th>
                         }
-                        @if (Template != null)
+                        @if (Template != null && ShowExpandColumn)
                         {
                             <th class="rz-col-icon  rz-unselectable-text" scope="col">
                                 <span class="rz-column-title"></span>
@@ -316,7 +314,7 @@
                     else
                     {
                         <tr class=" rz-datatable-emptymessage-row">
-                            <td class="rz-datatable-emptymessage" colspan="@visibleColumns.Count">
+                            <td class="rz-datatable-emptymessage" colspan="@(visibleColumns.Count + (Template != null && ShowExpandColumn ? 1 : 0))">
                                 @if (EmptyTemplate != null)
                                 {
                                     @EmptyTemplate
@@ -340,7 +338,7 @@
                                 <span class="rz-column-title"></span>
                             </td>
                         }
-                        @if (Template != null)
+                        @if (Template != null && ShowExpandColumn)
                         {
                             <td class="rz-col-icon rz-unselectable-text" scope="col">
                                 <span class="rz-column-title"></span>

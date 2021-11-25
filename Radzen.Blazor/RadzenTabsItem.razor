@@ -2,7 +2,7 @@
 @implements IDisposable
 @if (Visible)
 {
- <li role="presentation" class="nav-item" @attributes=@Attributes style=@Style>
+ <li role="presentation" class="@ClassList nav-item" @attributes=@Attributes style=@Style>
     <a @onclick=@OnClick class=@Class role="tab" href="javascript: void(0)" id="@($"{Tabs.Id}-tabpanel-{Index}-label")" aria-selected=@(IsSelected? "true" : "false")  aria-controls="@($"{Tabs.Id}-tabpanel-{Index}")">
         @if (!string.IsNullOrEmpty(Icon))
         {

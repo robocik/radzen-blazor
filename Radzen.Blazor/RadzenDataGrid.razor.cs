@@ -175,7 +175,7 @@ namespace Radzen.Blazor
                 if(_groupedPagedView == null)
                 {
                     _groupedPagedView = PagedView.GroupByMany(groups.Select(g => $"np({g.Property})").ToArray()).ToList();
-                 }
+                }
                 return _groupedPagedView;
             }
         }
@@ -480,6 +480,13 @@ namespace Radzen.Blazor
         public DataGridExpandMode ExpandMode { get; set; } = DataGridExpandMode.Multiple;
 
         /// <summary>
+        /// Gets or sets whether the expandable indicator column is visible.
+        /// </summary>
+        /// <value>The expandable indicator column visibility.</value>
+        [Parameter]
+        public bool ShowExpandColumn { get; set; } = true;
+
+        /// <summary>
         /// Gets or sets the edit mode.
         /// </summary>
         /// <value>The edit mode.</value>
@@ -700,9 +707,9 @@ namespace Radzen.Blazor
         public bool AllowColumnResize { get; set; }
 
         /// <summary>
-        /// Gets or sets a value indicating whether column reoder is allowed.
+        /// Gets or sets a value indicating whether column reorder is allowed.
         /// </summary>
-        /// <value><c>true</c> if column reoder is allowed; otherwise, <c>false</c>.</value>
+        /// <value><c>true</c> if column reorder is allowed; otherwise, <c>false</c>.</value>
         [Parameter]
         public bool AllowColumnReorder { get; set; }
 
@@ -1137,8 +1144,9 @@ namespace Radzen.Blazor
         internal string RowStyle(TItem item, int index)
         {
             var evenOrOdd = index % 2 == 0 ? "rz-datatable-even" : "rz-datatable-odd";
+            var isInEditMode = IsRowInEditMode(item) ? "rz-datatable-edit" : "";
 
-            return (RowSelect.HasDelegate || ValueChanged.HasDelegate || SelectionMode == DataGridSelectionMode.Multiple) && selectedItems.Keys.Contains(item) ? $"rz-state-highlight {evenOrOdd} " : $"{evenOrOdd} ";
+            return (RowSelect.HasDelegate || ValueChanged.HasDelegate || SelectionMode == DataGridSelectionMode.Multiple) && selectedItems.Keys.Contains(item) ? $"rz-state-highlight {evenOrOdd} {isInEditMode} " : $"{evenOrOdd} {isInEditMode} ";
         }
 
         internal Tuple<Radzen.RowRenderEventArgs<TItem>, IReadOnlyDictionary<string, object>> RowAttributes(TItem item)
