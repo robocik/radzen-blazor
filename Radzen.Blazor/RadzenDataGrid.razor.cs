@@ -51,26 +51,14 @@ namespace Radzen.Blazor
         {
             var view = AllowPaging ? PagedView : View;
             var totalItemsCount = LoadData.HasDelegate ? Count : view.Count();
-            var top = totalItemsCount > request.Count ? Math.Min(request.Count, totalItemsCount - request.StartIndex) : PageSize;
+            var top = request.Count;
 
             if(top <= 0)
             {
                 top = PageSize;
             }
 
-            if (LoadData.HasDelegate)
-            {
-                var orderBy = GetOrderBy();
-
-                Query.Skip = request.StartIndex;
-                Query.Top = top;
-                Query.OrderBy = orderBy;
-
-                var filterString = columns.ToFilterString<TItem>();
-                Query.Filter = filterString;
-
-                await LoadData.InvokeAsync(new Radzen.LoadDataArgs() { Skip = request.StartIndex, Top = top, OrderBy = orderBy, Filter = IsOData() ? columns.ToODataFilterString<TItem>() : filterString });
-            }
+            await InvokeLoadData(request.StartIndex, top);
 
             virtualDataItems = (LoadData.HasDelegate ? Data : itemToInsert != null ? (new[] { itemToInsert }).Concat(view.Skip(request.StartIndex).Take(top)) : view.Skip(request.StartIndex).Take(top)).ToList();
 
@@ -161,6 +149,13 @@ namespace Radzen.Blazor
         }
 
         /// <summary>
+        /// Gets or sets a value indicating whether DataGrid is responsive.
+        /// </summary>
+        /// <value><c>true</c> if DataGrid is Responsive; otherwise, <c>false</c>.</value>
+        [Parameter]
+        public bool Responsive { get; set; }
+
+        /// <summary>
         /// The grouped and paged View
         /// </summary>
         IEnumerable<GroupResult> _groupedPagedView;
@@ -248,6 +243,8 @@ namespace Radzen.Blazor
                     descriptor = new SortDescriptor() { Property = column.Property, SortOrder = column.SortOrder.Value };
                     sorts.Add(descriptor);
                 }
+
+                StateHasChanged();
             }
         }
 
@@ -371,7 +368,9 @@ namespace Radzen.Blazor
 
         private string getFilterIconCss(RadzenDataGridColumn<TItem> column)
         {
-            var additionalStyle = column.GetFilterValue() != null || column.GetSecondFilterValue() != null ? "rz-grid-filter-active" : "";
+            var additionalStyle = column.GetFilterValue() != null || column.GetSecondFilterValue() != null || 
+                column.GetFilterOperator() == FilterOperator.IsNotNull || column.GetFilterOperator() == FilterOperator.IsNull 
+                    ? "rz-grid-filter-active" : "";
             return $"rzi rz-grid-filter-icon {additionalStyle}";
         }
 
@@ -419,6 +418,12 @@ namespace Radzen.Blazor
             column.SetFilterOperator(null);
             column.SetSecondFilterOperator(null);
 
+            column.FilterValue = null;
+            column.SecondFilterValue = null;
+            column.FilterOperator = default(FilterOperator);
+            column.SecondFilterOperator = default(FilterOperator);
+            column.LogicalFilterOperator = default(LogicalFilterOperator);
+
             skip = 0;
             CurrentPage = 0;
 
@@ -451,6 +456,30 @@ namespace Radzen.Blazor
             if (CellRender != null)
             {
                 CellRender(args);
+            }
+
+            return new System.Collections.ObjectModel.ReadOnlyDictionary<string, object>(args.Attributes);
+        }
+
+        internal IReadOnlyDictionary<string, object> HeaderCellAttributes(RadzenDataGridColumn<TItem> column)
+        {
+            var args = new Radzen.DataGridCellRenderEventArgs<TItem>() { Column = column };
+
+            if (HeaderCellRender != null)
+            {
+                HeaderCellRender(args);
+            }
+
+            return new System.Collections.ObjectModel.ReadOnlyDictionary<string, object>(args.Attributes);
+        }
+
+        internal IReadOnlyDictionary<string, object> FooterCellAttributes(RadzenDataGridColumn<TItem> column)
+        {
+            var args = new Radzen.DataGridCellRenderEventArgs<TItem>() { Column = column };
+
+            if (FooterCellRender != null)
+            {
+                FooterCellRender(args);
             }
 
             return new System.Collections.ObjectModel.ReadOnlyDictionary<string, object>(args.Attributes);
@@ -597,6 +626,20 @@ namespace Radzen.Blazor
         /// <value>The starts with text.</value>
         [Parameter]
         public string StartsWithText { get; set; } = "Starts with";
+
+        /// <summary>
+        /// Gets or sets the not null text.
+        /// </summary>
+        /// <value>The not null text.</value>
+        [Parameter]
+        public string IsNotNullText { get; set; } = "Is not null";
+
+        /// <summary>
+        /// Gets or sets the is null text.
+        /// </summary>
+        /// <value>The null text.</value>
+        [Parameter]
+        public string IsNullText { get; set; } = "Is null";
 
         internal class NumericFilterEventCallback
         {
@@ -769,15 +812,16 @@ namespace Radzen.Blazor
 
                 if (columnToReorder != null && columnToReorderTo != null)
                 {
-                    var actualColumnIndex = columns.IndexOf(columnToReorderTo);
+                    var actualColumnIndexFrom = columns.IndexOf(columnToReorder);
+                    var actualColumnIndexTo = columns.IndexOf(columnToReorderTo);
                     columns.Remove(columnToReorder);
-                    columns.Insert(actualColumnIndex, columnToReorder);
+                    columns.Insert(actualColumnIndexTo, columnToReorder);
 
                     await ColumnReordered.InvokeAsync(new DataGridColumnReorderedEventArgs<TItem>
                     {
                         Column = columnToReorder,
-                        OldIndex = indexOfColumnToReoder.Value,
-                        NewIndex = actualColumnIndex
+                        OldIndex = actualColumnIndexFrom,
+                        NewIndex = actualColumnIndexTo
                     });
                 }
 
@@ -794,7 +838,7 @@ namespace Radzen.Blazor
         public async Task OnColumnResized(int columnIndex, double value)
         {
             var column = columns.Where(c => c.Visible).ToList()[columnIndex];
-            column.SetWidth($"{value}px");
+            column.SetWidth($"{Math.Round(value)}px");
             await ColumnResized.InvokeAsync(new DataGridColumnResizedEventArgs<TItem>
             {
                 Column = column,
@@ -863,6 +907,12 @@ namespace Radzen.Blazor
                         if (skip >= Count && Count > PageSize)
                         {
                             skip = Count - PageSize;
+                        }
+
+                        if (Count <= PageSize)
+                        {
+                            skip = 0;
+                            CurrentPage = 0;
                         }
 
                         StateHasChanged();
@@ -972,6 +1022,20 @@ namespace Radzen.Blazor
         public Action<DataGridCellRenderEventArgs<TItem>> CellRender { get; set; }
 
         /// <summary>
+        /// Gets or sets the header cell render callback. Use it to set header cell attributes.
+        /// </summary>
+        /// <value>The cell render callback.</value>
+        [Parameter]
+        public Action<DataGridCellRenderEventArgs<TItem>> HeaderCellRender { get; set; }
+
+        /// <summary>
+        /// Gets or sets the footer cell render callback. Use it to set footer cell attributes.
+        /// </summary>
+        /// <value>The cell render callback.</value>
+        [Parameter]
+        public Action<DataGridCellRenderEventArgs<TItem>> FooterCellRender { get; set; }
+
+        /// <summary>
         /// Gets or sets the render callback.
         /// </summary>
         /// <value>The render callback.</value>
@@ -1023,7 +1087,7 @@ namespace Radzen.Blazor
             {
                 Count = 1;
             }
-    #if NET5
+#if NET5
             if (AllowVirtualization && virtualize != null)
             {
                 if(!LoadData.HasDelegate)
@@ -1035,7 +1099,28 @@ namespace Radzen.Blazor
                     Data = null;
                 }
             }
-    #endif
+#endif
+            await InvokeLoadData(skip, PageSize);
+
+            CalculatePager();
+
+            if (!LoadData.HasDelegate)
+            {
+                StateHasChanged();
+            }
+            else
+            {
+#if NET5
+                if (AllowVirtualization && virtualize != null)
+                {
+                    await virtualize.RefreshDataAsync();
+                }
+#endif
+            } 
+       }
+
+        async Task InvokeLoadData(int start, int top)
+        {
             var orderBy = GetOrderBy();
 
             Query.Skip = skip;
@@ -1047,41 +1132,28 @@ namespace Radzen.Blazor
 
             if (LoadData.HasDelegate)
             {
+                var filters = columns.Where(c => c.Filterable && c.Visible && (c.GetFilterValue() != null
+                        || c.GetFilterOperator() == FilterOperator.IsNotNull || c.GetFilterOperator() == FilterOperator.IsNull)).Select(c => new FilterDescriptor()
+                        {
+                            Property = c.GetFilterProperty(),
+                            FilterValue = c.GetFilterValue(),
+                            FilterOperator = c.GetFilterOperator(),
+                            SecondFilterValue = c.GetSecondFilterValue(),
+                            SecondFilterOperator = c.GetSecondFilterOperator(),
+                            LogicalFilterOperator = c.GetLogicalFilterOperator()
+                        });
+
                 await LoadData.InvokeAsync(new Radzen.LoadDataArgs()
                 {
-                    Skip = skip,
-                    Top = PageSize,
+                    Skip = start,
+                    Top = top,
                     OrderBy = orderBy,
                     Filter = IsOData() ? columns.ToODataFilterString<TItem>() : filterString,
-                    Filters = columns.Where(c => c.Filterable && c.Visible && c.GetFilterValue() != null).Select(c => new FilterDescriptor()
-                    {
-                        Property = c.GetFilterProperty(),
-                        FilterValue = c.GetFilterValue(),
-                        FilterOperator = c.GetFilterOperator(),
-                        SecondFilterValue = c.GetSecondFilterValue(),
-                        SecondFilterOperator = c.GetSecondFilterOperator(),
-                        LogicalFilterOperator = c.GetLogicalFilterOperator()
-                    }),
+                    Filters = filters,
                     Sorts = sorts
-                }); ;
+                });
             }
-
-            CalculatePager();
-
-            if (!LoadData.HasDelegate)
-            {
-                StateHasChanged();
-            }
-            else
-            {
-    #if NET5
-                if (AllowVirtualization && virtualize != null)
-                {
-                    await virtualize.RefreshDataAsync();
-                }
-    #endif        
-            } 
-       }
+        }
 
         internal async Task ChangeState()
         {
@@ -1195,18 +1267,6 @@ namespace Radzen.Blazor
                 {
                     Dispose();
                 }
-            }
-        }
-
-        /// <summary>
-        /// Called after render.
-        /// </summary>
-        /// <param name="firstRender">if set to <c>true</c> first render.</param>
-        protected override void OnAfterRender(bool firstRender)
-        {
-            if (firstRender)
-            {
-                StateHasChanged();
             }
         }
 
@@ -1683,6 +1743,11 @@ namespace Radzen.Blazor
             if (RowSelect.HasDelegate || ValueChanged.HasDelegate || SelectionMode == DataGridSelectionMode.Multiple)
             {
                 additionalClasses.Add("rz-selectable");
+            }
+
+            if (Responsive)
+            {
+                additionalClasses.Add("rz-datatable-reflow");
             }
 
             return $"rz-has-paginator rz-datatable  rz-datatable-scrollable {String.Join(" ", additionalClasses)}";

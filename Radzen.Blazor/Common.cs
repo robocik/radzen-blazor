@@ -414,6 +414,29 @@ namespace Radzen
     }
 
     /// <summary>
+    /// Specifies the ways a <see cref="RadzenTabs" /> component renders its titles.
+    /// </summary>
+    public enum TabPosition
+    {
+        /// <summary>
+        /// The RadzenTabs titles are displayed at the top of the component.
+        /// </summary>
+        Top,
+        /// <summary>
+        /// The RadzenTabs titles are displayed at the bottom of the component.
+        /// </summary>
+        Bottom,
+        /// <summary>
+        /// The RadzenTabs titles are displayed at the left side of the component.
+        /// </summary>
+        Left,
+        /// <summary>
+        /// The RadzenTabs titles are displayed at the right side of the component.
+        /// </summary>
+        Right
+    }
+
+    /// <summary>
     /// Specifies the position at which a Radzen Blazor component renders its built-in <see cref="RadzenPager" />.
     /// </summary>
     public enum PagerPosition
@@ -722,7 +745,15 @@ namespace Radzen
         /// <summary>
         /// Satisfied if the current value does not contain the specified value.
         /// </summary>
-        DoesNotContain
+        DoesNotContain,
+        /// <summary>
+        /// Satisfied if the current value is null.
+        /// </summary>
+        IsNull,
+        /// <summary>
+        /// Satisfied if the current value is not null.
+        /// </summary>
+        IsNotNull
     }
 
     /// <summary>
@@ -1774,6 +1805,7 @@ namespace Radzen
         public double NewSize { get; set; }
     }
 
+    /// <inheritdoc />
     public class MD5
     {
         /*
@@ -1808,12 +1840,14 @@ namespace Radzen
             0xf7537e82, 0xbd3af235, 0x2ad7d2bb, 0xeb86d391
         };
 
+        /// <inheritdoc />
         public static uint leftRotate(uint x, int c)
         {
             return (x << c) | (x >> (32 - c));
         }
 
         // assumes whole bytes as input
+        /// <inheritdoc />
         public static string Calculate(byte[] input)
         {
             uint a0 = 0x67452301;   // A

@@ -3,7 +3,8 @@
 @inherits FormComponent<bool>
 @if (Visible)
 {
-    <div @ref="@Element" @attributes="Attributes" class="form-check form-switch @CssClass"  id="@GetId()" @onmouseup="@OnMouseUp" @onkeypress="@(async (args) => { if (args.Code == "Space") { await Toggle(); } })" style="outline: 0 none; @Style" tabindex="@TabIndex">
+    <div @ref="@Element" @attributes="Attributes" class="form-check form-switch @CssClass"  id="@GetId()" 
+         @onclick="@Toggle" @onkeypress="@(async (args) => { if (args.Code == "Space") { await Toggle(); } })" style="outline: 0 none; @Style" tabindex="@TabIndex">
         @*<div class="rz-helper-hidden-accessible">
         <input type="checkbox" name="@Name" value="@Value" tabindex="-1">
     </div>
