@@ -8,8 +8,11 @@
             <div class="modal-content">
         @if (Dialog.Options.ShowTitle)
         {
+            @if (Dialog.Options.Draggable)
+            {
+                <Draggable Drag="@OnDrag" DragStart="@OnDragStart">
                     <div class="modal-header">
-                        <span class="rz-dialog-title" id="rz-dialog-0-label">@Dialog.Title</span>
+                        <span class="rz-dialog-title" id="rz-dialog-0-label">@((MarkupString)Dialog.Title)</span>
                         @if (Dialog.Options.ShowClose)
                         {
                             <a href="javascript:void(0)" @onclick="@Close" role="button" class="rz-dialog-titlebar-icon rz-dialog-titlebar-close ">
@@ -17,15 +20,22 @@
                             </a>
                         }
                     </div>
-                    @*<div class="rz-dialog-titlebar">
-                    <span class="rz-dialog-title" id="rz-dialog-0-label">@Dialog.Title</span>
+                </Draggable>
+            }
+            else
+            {
+                <div class="modal-header">
+                    <span class="rz-dialog-title" id="rz-dialog-0-label">@((MarkupString)Dialog.Title)</span>
                     @if (Dialog.Options.ShowClose)
                     {
-                        <a href="javascript:void(0)" @onclick=@Close role="button" class="rz-dialog-titlebar-icon rz-dialog-titlebar-close">
+                        <a href="javascript:void(0)" @onclick="@Close" role="button" class="rz-dialog-titlebar-icon rz-dialog-titlebar-close ">
                             <span class="rzi rzi-times"></span>
                         </a>
                     }
-                        </div>*@
+                </div>
+            }
+                    
+
         }
         <div class="rz-dialog-content">
             @if (Dialog.Options.ChildContent != null)

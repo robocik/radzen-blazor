@@ -15,7 +15,7 @@
         {
             <span class="@($"rz-calendar rz-calendar-w-btn{(Disabled ? " rz-state-disabled" : "")}")" style="width:100%">
                 <input @ref="@input" disabled="@Disabled" readonly="@IsReadonly" value="@FormattedValue" tabindex="@TabIndex"
-                       @onchange="@ParseDate" autocomplete="off" type="text" 
+                       @onchange="@ParseDate" autocomplete="off" type="text" name="@Name"
                        class="rz-inputtext @InputClass form-control" id="@Name" placeholder="@Placeholder" />
 
                 <button onclick="@getOpenPopup()" class="@($"rz-datepicker-trigger rz-calendar-button rz-button rz-button-icon-only{(Disabled ? " rz-state-disabled" : "")}")" tabindex="-1" type="button">
@@ -74,14 +74,14 @@
 
                                                 @if (CurrentDate.Month == date.Month)
                                                 {
-                                                    <td @attributes="@(dateArgs.Attributes)" onmouseup=@(Inline || ShowTime ? "" : $"Radzen.closePopup('{PopupID}')")
+                                                    <td @attributes="@(dateArgs.Attributes)" onmouseup=@(Inline || ShowTime || dateArgs.Disabled ? "" : $"Radzen.closePopup('{PopupID}')")
                                                     @onclick="@(async () => { if (!Disabled && !dateArgs.Disabled) { await SetDay(date); } })">
                                                         <span class=@($"rz-state-default{(DateTimeValue.HasValue && DateTimeValue.Value.Year == date.Year && DateTimeValue.Value.Month == date.Month && DateTimeValue.Value.Day == date.Day ? " rz-state-active" : "")}{(!dateArgs.Disabled ? "" : " rz-state-disabled")}")>@date.Day</span>
                                                     </td>
                                                 }
                                                 else
                                                 {
-                                                    <td @attributes="@(dateArgs.Attributes)" class="rz-datepicker-other-month" onmouseup=@(Inline || ShowTime ? "" : $"Radzen.closePopup('{PopupID}')")
+                                                    <td @attributes="@(dateArgs.Attributes)" class="rz-datepicker-other-month" onmouseup=@(Inline || ShowTime || dateArgs.Disabled ? "" : $"Radzen.closePopup('{PopupID}')")
                                                     @onclick="@(async () => { if (!Disabled && !dateArgs.Disabled) { await SetDay(date); } })">
                                                         <span class="rz-state-default rz-state-disabled">@date.Day</span>
                                                     </td>
