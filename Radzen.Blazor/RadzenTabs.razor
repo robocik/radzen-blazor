@@ -5,7 +5,7 @@
 @if (Visible)
 {
     <div @ref=@Element style=@Style @attributes=@Attributes class=@GetCssClass() id=@GetId()>
-        <ul role="tablist" class="nav nav-tabs">
+        <ul role="tablist" class="nav nav-tabs" style="z-index: 1000">
             @Tabs
         </ul>
         <div class="rz-tabview-panels">

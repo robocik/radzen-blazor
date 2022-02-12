@@ -121,10 +121,12 @@
         get
         {
             var baseStyle = "";
-            //var widthStyle = string.IsNullOrEmpty(dialog.Options.Width) ? "" : $"width: {dialog.Options.Width};";
-            var heightStyle = string.IsNullOrEmpty(Dialog.Options.Height) ? "" : $"height: {Dialog.Options.Height};";
-            var topStyle = string.IsNullOrEmpty(Dialog.Options.Top) ? "" : $"top: {Dialog.Options.Top};";
-            var leftStyle = string.IsNullOrEmpty(Dialog.Options.Left) ? "" : $"left: {Dialog.Options.Left};";
+            var widthStyle = !string.IsNullOrEmpty(width) ? width : string.IsNullOrEmpty(Dialog.Options.Width) ? "" : $"width: {Dialog.Options.Width};";
+            var heightStyle = !string.IsNullOrEmpty(height) ? height : string.IsNullOrEmpty(Dialog.Options.Height) ? "" : $"height: {Dialog.Options.Height};";
+            var topStyle = !string.IsNullOrEmpty(top) ? top : string.IsNullOrEmpty(Dialog.Options.Top) ? "" : $"top: {Dialog.Options.Top};";
+            var leftStyle = !string.IsNullOrEmpty(left) ? left :string.IsNullOrEmpty(Dialog.Options.Left) ? "" : $"left: {Dialog.Options.Left};";
+            var bottomStyle = string.IsNullOrEmpty(Dialog.Options.Bottom) ? "" : $"bottom: {Dialog.Options.Bottom};";
+            var resizeStyle = Dialog.Options.Resizable ? "resize:both;" : "";
 
             return $"{baseStyle}{heightStyle}{topStyle}{leftStyle}{Dialog.Options.Style}";
         }
@@ -142,7 +144,12 @@
     {
         var stateHasChanged = reference?.GetType().GetMethod("StateHasChanged", BindingFlags.NonPublic | BindingFlags.Instance);
 
-        InvokeAsync(() => stateHasChanged?.Invoke(reference, null)).ConfigureAwait(false);
+        InvokeAsync(() => 
+        {
+            StateHasChanged();
+            stateHasChanged?.Invoke(reference, null);
+        })
+        .ConfigureAwait(false);
     }
 
     public void Dispose()

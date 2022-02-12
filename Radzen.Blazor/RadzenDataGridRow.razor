@@ -2,16 +2,19 @@
 @typeparam TItem
 @implements IRadzenForm
 @{var rowArgs = Grid?.RowAttributes(Item); }
+@{var firstLevel = Grid.AllowCompositeDataCells ? 0 : Grid.deepestChildColumnLevel; }
+@for(var i = firstLevel; i < Grid.deepestChildColumnLevel + 1; i++)
+{
 <tr class="@(Grid.RowStyle(Item, Index))" @attributes="@rowArgs.Item2">
     @foreach (var g in Grid.groups)
     {
-        <td class="rz-col-icon">
+        <td class="rz-col-icon" rowspan="@(Grid.AllowCompositeDataCells ? (Grid.deepestChildColumnLevel + 1) : 1)">
             <span class="rz-column-title"></span>
         </td>
     }
-    @if (Grid.Template != null && Grid.ShowExpandColumn)
+    @if (Grid.Template != null && Grid.ShowExpandColumn && i == firstLevel)
     {
-        <td class="rz-col-icon">
+        <td class="rz-col-icon" rowspan="@(Grid.AllowCompositeDataCells ? (Grid.deepestChildColumnLevel + 1) : 1)">
             <span class="rz-column-title"></span>
             @if (rowArgs.Item1.Expandable)
             {
@@ -21,13 +24,12 @@
             }
         </td>
     }
-    <CascadingValue Value=@EditContext>
-        <CascadingValue Value=this>
-            @for (var j = 0; j < Columns.Count; j++)
+
+        @for (var j = 0; j < Columns.Count; j++)
+        {
+            if (Grid.rowSpans.ContainsKey(j))
             {
-                if (Grid.rowSpans.ContainsKey(j))
-                {
-                    Grid.rowSpans[j] = Grid.rowSpans[j] - 1;
+                Grid.rowSpans[j] = Grid.rowSpans[j] - 1;
 
                     if (Grid.rowSpans[j] <= 0)
                     {
@@ -58,8 +60,8 @@
                     Grid.rowSpans.Add(j, (int)Convert.ChangeType(rowspan, TypeCode.Int32));
                 }
 
-            <RadzenDataGridCell Grid="@this.Grid" Item="@Item" Column="@column"
-                                Style="@column.GetStyle(true)" CssClass="@(column.CssClass + " " + Grid.getFrozenColumnClass(column, Columns))" Attributes="@(cellAttr)">
+            <RadzenDataGridCell Row=@this EditContext=EditContext RowIndex="@i" Grid="@this.Grid" Item="@Item" Column="@column"
+                                Style="@column.GetStyle(true)" CssClass="@(column.CssClass + " " + Grid.getFrozenColumnClass(column, Columns) + " " + (column.Columns != null || column.Parent != null ? "rz-composite-cell" : ""))" Attributes="@(cellAttr)">
                 @if (Grid.Responsive)
                 {
                     <span class="rz-column-title">
@@ -92,9 +94,10 @@
                 </span>
             </RadzenDataGridCell>
         }
-    </CascadingValue>
-    </CascadingValue>
+   
 </tr>
+}
+
 @if (Grid.Template != null && Grid.expandedItems.Keys.Contains(Item))
 {
     <tr class="rz-expanded-row-content">

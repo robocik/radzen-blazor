@@ -16,11 +16,26 @@ namespace Radzen.Blazor
     /// </example>
     public partial class RadzenPager : RadzenComponent
     {
+        static readonly IDictionary<HorizontalAlign, string> HorizontalAlignCssClasses = new Dictionary<HorizontalAlign, string>
+        {
+            {HorizontalAlign.Center, "rz-align-center"},
+            {HorizontalAlign.Left, "rz-align-left"},
+            {HorizontalAlign.Right, "rz-align-right"},
+            {HorizontalAlign.Justify, "rz-align-justify"}
+        };
+
         /// <inheritdoc />
         protected override string GetComponentCssClass()
         {
-            return "rz-paginator rz-unselectable-text rz-helper-clearfix";
+            return $"rz-paginator rz-unselectable-text rz-helper-clearfix {HorizontalAlignCssClasses[HorizontalAlign]}";
         }
+
+        /// <summary>
+        /// Gets or sets the horizontal align.
+        /// </summary>
+        /// <value>The horizontal align.</value>
+        [Parameter]
+        public HorizontalAlign HorizontalAlign { get; set; } = HorizontalAlign.Justify;
 
         /// <summary>
         /// Gets or sets the page size.
@@ -42,6 +57,13 @@ namespace Radzen.Blazor
         /// <value>The page size options.</value>
         [Parameter]
         public IEnumerable<int> PageSizeOptions { get; set; }
+
+        /// <summary>
+        /// Gets or sets the page size description text.
+        /// </summary>
+        /// <value>The page size description text.</value>
+        [Parameter]
+        public string PageSizeText { get; set; } = "items per page";
 
         /// <summary>
         /// Gets or sets the pager summary visibility.
@@ -89,8 +111,15 @@ namespace Radzen.Blazor
         /// <returns><c>true</c> if XXXX, <c>false</c> otherwise.</returns>
         protected bool GetVisible()
         {
-            return Visible && (Count > PageSize || (PageSizeOptions != null && PageSizeOptions.Any()));
+            return Visible && (AlwaysVisible || Count > PageSize || (PageSizeOptions != null && PageSizeOptions.Any()));
         }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether pager is visible even when not enough data for paging.
+        /// </summary>
+        /// <value><c>true</c> if pager is visible even when not enough data for paging otherwise, <c>false</c>.</value>
+        [Parameter]
+        public bool AlwaysVisible { get; set; }
 
         /// <summary>
         /// Gets or sets the page changed callback.

@@ -72,7 +72,7 @@ namespace Radzen.Blazor
         /// </summary>
         /// <value>The class list.</value>
         ClassList ClassList => ClassList.Create()
-                                        .Add("rz-tabview-selected", IsSelected)
+                                        .Add("active", IsSelected)
                                         .AddDisabled(Disabled)
                                         .Add(Attributes);
 

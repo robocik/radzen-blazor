@@ -13,7 +13,7 @@
          style="@Style" tabindex="@TabIndex" id="@GetId()">
         <div class="rz-helper-hidden-accessible">
             <input disabled="@Disabled" style="width:100%" aria-haspopup="listbox" readonly="" type="text"
-                   name="@Name" aria-label="@(!Multiple && Value != null ? PropertyAccess.GetItemOrValueFromProperty(Value, TextProperty) : "")" />
+                   name="@Name" aria-label="@(!Multiple && internalValue != null ? PropertyAccess.GetItemOrValueFromProperty(internalValue, TextProperty) : "")" />
 
         </div>
 
@@ -23,7 +23,7 @@
                 @Template(selectedItem)
             </label>
         }
-        else if (selectedItem != null)
+        else if (selectedItem != null && !Multiple)
         {
             <label class="rz-dropdown-label rz-inputtext " onclick="@OpenPopupScript()" style="width:100%;">
                 @PropertyAccess.GetItemOrValueFromProperty(selectedItem, TextProperty)
@@ -93,7 +93,7 @@
                 }
                 @if (Template != null)
                 {
-                    <RadzenDataGrid Responsive="@Responsive" AllowColumnResize="@AllowColumnResize" ColumnWidth="@ColumnWidth" @ref="grid" Data="@(LoadData.HasDelegate ? (Data != null ? Data.Cast<object>() : Enumerable.Empty<object>()) : pagedData)" Count="@(LoadData.HasDelegate ? Count : count)" LoadData="@OnLoadData"
+                    <RadzenDataGrid PagerHorizontalAlign="@PagerHorizontalAlign" PagerAlwaysVisible="@PagerAlwaysVisible" Responsive="@Responsive" AllowColumnResize="@AllowColumnResize" ColumnWidth="@ColumnWidth" @ref="grid" Data="@(LoadData.HasDelegate ? (Data != null ? Data.Cast<object>() : Enumerable.Empty<object>()) : pagedData)" Count="@(LoadData.HasDelegate ? Count : count)" LoadData="@OnLoadData"
                                     TItem="object" ShowPagingSummary="@ShowPagingSummary" PagingSummaryFormat="@PagingSummaryFormat" PageSize="@PageSize" PageNumbersCount="@PageNumbersCount" AllowPaging="@(!IsVirtualizationAllowed())" AllowSorting="@AllowSorting" RowSelect="@OnRowSelect" Style="@(IsVirtualizationAllowed() ? "height:285px" : "")">
                         <Columns>
                             <RadzenDataGridColumn TItem="object" Property="@TextProperty" Title="@TextProperty" Type="typeof(string)">
@@ -102,13 +102,16 @@
                                 </Template>
                             </RadzenDataGridColumn>
                         </Columns>
+                        <EmptyTemplate>
+                            @EmptyTemplate
+                        </EmptyTemplate>
                     </RadzenDataGrid>
                 }
                 else
                 {
                     if (!string.IsNullOrEmpty(TextProperty) || Columns != null)
                     {
-                        <RadzenDataGrid Responsive="@Responsive" AllowColumnResize="@AllowColumnResize" ColumnWidth="@ColumnWidth" EmptyText="@EmptyText" @ref="grid" Data="@(LoadData.HasDelegate ? (Data != null ? Data.Cast<object>() : Enumerable.Empty<object>()) : pagedData)" Count="@(LoadData.HasDelegate ? Count : count)" LoadData="@OnLoadData"
+                        <RadzenDataGrid PagerHorizontalAlign="@PagerHorizontalAlign" PagerAlwaysVisible="@PagerAlwaysVisible" Responsive="@Responsive" AllowColumnResize="@AllowColumnResize" ColumnWidth="@ColumnWidth" EmptyText="@EmptyText" @ref="grid" Data="@(LoadData.HasDelegate ? (Data != null ? Data.Cast<object>() : Enumerable.Empty<object>()) : pagedData)" Count="@(LoadData.HasDelegate ? Count : count)" LoadData="@OnLoadData"
                                         TItem="object" ShowPagingSummary="@ShowPagingSummary" PagingSummaryFormat="@PagingSummaryFormat" PageSize="@PageSize" PageNumbersCount="@PageNumbersCount" AllowPaging="@(!IsVirtualizationAllowed())" AllowSorting="@AllowSorting" RowSelect="@OnRowSelect" Style="@(IsVirtualizationAllowed() ? "height:285px" : "")">
                             <Columns>
                                 @if (Columns != null)
@@ -120,11 +123,14 @@
                                     <RadzenDataGridColumn TItem="object" Property="@TextProperty" Title="@TextProperty" Type="typeof(string)" />
                                 }
                             </Columns>
+                            <EmptyTemplate>
+                                @EmptyTemplate
+                            </EmptyTemplate>
                         </RadzenDataGrid>
                     }
                     else
                     {
-                        <RadzenDataGrid Responsive="@Responsive" AllowColumnResize="@AllowColumnResize" ColumnWidth="@ColumnWidth" EmptyText="@EmptyText" @ref="grid" Data="@(LoadData.HasDelegate ? (Data != null ? Data.Cast<object>() : Enumerable.Empty<object>()) : pagedData)" Count="@(LoadData.HasDelegate ? Count : count)" LoadData="@OnLoadData"
+                        <RadzenDataGrid PagerHorizontalAlign="@PagerHorizontalAlign" PagerAlwaysVisible="@PagerAlwaysVisible" Responsive="@Responsive" AllowColumnResize="@AllowColumnResize" ColumnWidth="@ColumnWidth" EmptyText="@EmptyText" @ref="grid" Data="@(LoadData.HasDelegate ? (Data != null ? Data.Cast<object>() : Enumerable.Empty<object>()) : pagedData)" Count="@(LoadData.HasDelegate ? Count : count)" LoadData="@OnLoadData"
                                         TItem="object" ShowPagingSummary="@ShowPagingSummary" PagingSummaryFormat="@PagingSummaryFormat" PageSize="@PageSize" PageNumbersCount="@PageNumbersCount" AllowPaging="@(!IsVirtualizationAllowed())" AllowSorting="@AllowSorting" RowSelect="@OnRowSelect" Style="@(IsVirtualizationAllowed() ? "height:285px" : "")">
                             <Columns>
                                 <RadzenDataGridColumn TItem="object" Property="it" Title="Item" Type="typeof(string)">
@@ -133,6 +139,9 @@
                                     </Template>
                                 </RadzenDataGridColumn>
                             </Columns>
+                            <EmptyTemplate>
+                                @EmptyTemplate
+                            </EmptyTemplate>
                         </RadzenDataGrid>
                     }
                 }

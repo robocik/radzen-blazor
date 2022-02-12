@@ -59,7 +59,7 @@
                             </div>
                         </RadzenCard>
                         <p class="mt-5 md-3 text-center">
-                            <RadzenLabel Text="Radzen Blazor Components, &copy; 2021 Radzen."></RadzenLabel>
+                            <RadzenLabel Text="Radzen Blazor Components, &copy; 2018-2022 Radzen."></RadzenLabel>
                             <a href="https://github.com/radzenhq/radzen-blazor" target="_blank">Source Code</a> licensed under
                             <a href="https://github.com/radzenhq/radzen-blazor/blob/master/LICENSE" target="_blank">MIT</a>
                         </p>
@@ -72,7 +72,7 @@
         </RadzenContentContainer>
     </ChildContent>
 </RadzenBody>
-<RadzenSidebar @ref="@sidebar0" @bind-Expanded="@sidebarExpanded">
+<RadzenSidebar @ref="@sidebar0" @bind-Expanded="@sidebarExpanded" class="demos-sidebar">
     <ChildContent>
         <div style="padding: 1rem">
             <RadzenTextBox Placeholder="Find component ..." type="search" @oninput="@FilterPanelMenu" style="width: 100%" />
@@ -80,28 +80,27 @@
         <RadzenPanelMenu Match="NavLinkMatch.Prefix">
             @foreach (var category in examples)
             {
-                <RadzenPanelMenuItem @bind-Expanded="@category.Expanded" Text="@category.Name" Path="@category.Path" Icon="@category.Icon">
+                <NavigationItem @bind-Expanded=@category.Expanded Example=@category>
                     @if (category.Children != null)
                     {
                         @foreach (var example in category.Children)
                         {
                             if (example.Children != null)
                             {
-                                <RadzenPanelMenuItem Text="@example.Name" @bind-Expanded="@example.Expanded" Icon="@example.Icon">
+                                <NavigationItem Example=@example>
                                 @foreach (var child in example.Children)
                                 {
-                                    <RadzenPanelMenuItem Text="@child.Name" Path="@child.Path" />
+                                    <NavigationItem Example=@child />
                                 }
-                                </RadzenPanelMenuItem>
-
+                                </NavigationItem>
                             }
                             else
                             {
-                                <RadzenPanelMenuItem Text="@example.Name" Path="@example.Path" Icon="@example.Icon" />
+                                <NavigationItem Example=@example />
                             }
                         }
                     }
-                </RadzenPanelMenuItem>
+                </NavigationItem>
             }
         </RadzenPanelMenu>
     </ChildContent>
@@ -116,35 +115,12 @@
     IEnumerable<Example> examples;
     protected override void OnInitialized()
     {
-        if (httpContextAccessor != null && httpContextAccessor.HttpContext != null &&
-             httpContextAccessor.HttpContext.Request != null && httpContextAccessor.HttpContext.Request.Headers.ContainsKey("User-Agent"))
-        {
-            var userAgent = httpContextAccessor.HttpContext.Request.Headers["User-Agent"].FirstOrDefault();
-            if (!string.IsNullOrEmpty(userAgent))
-            {
-                if (userAgent.Contains("iPhone") || userAgent.Contains("Android") || userAgent.Contains("Googlebot"))
-                {
-                    sidebarExpanded = false;
-                    bodyExpanded = true;
-                }
-            }
-        }
 
         ThemeService.Initialize(UriHelper);
 
         examples = ExampleService.Examples;
 
         System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("en-US");
-    }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (!firstRender)
-        {
-            var example = ExampleService.FindCurrent(UriHelper.ToAbsoluteUri(UriHelper.Uri));
-
-            await JSRuntime.InvokeVoidAsync("setTitle", ExampleService.TitleFor(example));
-        }
     }
 
     void FilterPanelMenu(ChangeEventArgs args)

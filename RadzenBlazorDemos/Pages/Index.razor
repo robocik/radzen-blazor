@@ -1,5 +1,11 @@
 ﻿@layout HomeLayout
 @page "/"
+@inject ExampleService ExampleService
+
+<PageTitle>@ExampleService.TitleFor(null)</PageTitle>
+<HeadContent>
+    <meta name="description" content="@ExampleService.DescriptionFor(null)">
+</HeadContent>
 
 <div class="next">
   <div class="container-fluid stage light">
@@ -133,9 +139,9 @@
                 <div class="col-sm-6 col-md-12 col-lg-6">
                   <h4>Data</h4>
                   <ul>
-                    <li><a href="/datagrid">DataGrid</a></li>
-                    <li><a href="/datalist">DataList</a></li>
-                    <li><a href="/pager">Pager</a></li>
+                    <li><a href="/datagrid">DataGrid</a><RadzenBadge Text="Updated" /></li>
+                    <li><a href="/datalist">DataList</a><RadzenBadge Text="Updated" /></li>
+                    <li><a href="/pager">Pager</a><RadzenBadge Text="Updated" /></li>
                     <li><a href="/scheduler">Scheduler</a></li>
                     <li><a href="/tree">Tree</a></li>
                   </ul>
@@ -303,7 +309,7 @@
               <a href="https://www.radzen.com" title="Create .NET Core web applications fast & easy" target="_blank"><img src="images/easier-than-you-think.svg" /></a>
             </p>
             <p class="mb-5">
-              <RadzenLabel Text="Radzen Blazor Components, &copy; 2021 Radzen."></RadzenLabel>
+              <RadzenLabel Text="Radzen Blazor Components, &copy; 2018-2022 Radzen."></RadzenLabel>
               <a href="https://github.com/radzenhq/radzen-blazor" target="_blank">Source Code</a> licensed under 
               <a href="https://github.com/radzenhq/radzen-blazor/blob/master/LICENSE" target="_blank">MIT</a>
             </p>
