@@ -279,6 +279,7 @@ namespace Radzen.Blazor
         private readonly List<RadzenDataGridColumn<TItem>> columns = new List<RadzenDataGridColumn<TItem>>();
         internal readonly List<RadzenDataGridColumn<TItem>> childColumns = new List<RadzenDataGridColumn<TItem>>();
         private readonly List<RadzenDataGridColumn<TItem>> allColumns = new List<RadzenDataGridColumn<TItem>>();
+        private List<RadzenDataGridColumn<TItem>> allPickableColumns = new List<RadzenDataGridColumn<TItem>>();
         internal object selectedColumns;
 
         /// <summary>
@@ -321,6 +322,7 @@ namespace Radzen.Blazor
             if (AllowColumnPicking)
             {
                 selectedColumns = allColumns;
+                allPickableColumns = allColumns.Where(c => c.Pickable).ToList();
             }
 
             StateHasChanged();
@@ -484,16 +486,8 @@ namespace Radzen.Blazor
             {
                 await JSRuntime.InvokeVoidAsync("Radzen.closePopup", $"{PopupID}{column.GetFilterProperty()}");
             }
-            column.SetFilterValue(null);
-            column.SetFilterValue(null, false);
-            column.SetFilterOperator(null);
-            column.SetSecondFilterOperator(null);
 
-            column.FilterValue = null;
-            column.SecondFilterValue = null;
-            column.FilterOperator = default(FilterOperator);
-            column.SecondFilterOperator = default(FilterOperator);
-            column.LogicalFilterOperator = default(LogicalFilterOperator);
+            column.ClearFilters();
 
             skip = 0;
             CurrentPage = 0;

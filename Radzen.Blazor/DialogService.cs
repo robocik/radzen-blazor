@@ -37,6 +37,20 @@ namespace Radzen
     /// </example>
     public class DialogService : IDisposable
     {
+        private DotNetObjectReference<DialogService> reference;
+        internal DotNetObjectReference<DialogService> Reference
+        {
+            get
+            {
+                if (reference == null)
+                {
+                    reference = DotNetObjectReference.Create(this);
+                }
+
+                return reference;
+            }
+        }
+
         /// <summary>
         /// Gets or sets the URI helper.
         /// </summary>
@@ -185,6 +199,7 @@ namespace Radzen
                 Style = options != null ? options.Style : "",
                 AutoFocusFirstElement = options != null ? options.AutoFocusFirstElement : true,
                 CloseDialogOnOverlayClick = options != null ? options.CloseDialogOnOverlayClick : false,
+                CloseDialogOnEsc = options != null ? options.CloseDialogOnEsc : true,
             });
         }
 
@@ -192,6 +207,7 @@ namespace Radzen
         /// Closes the last opened dialog with optional result.
         /// </summary>
         /// <param name="result">The result.</param>
+        [JSInvokable("DialogService.Close")]
         public void Close(dynamic result = null)
         {
             var dialog = dialogs.LastOrDefault();
@@ -241,9 +257,10 @@ namespace Radzen
                 Style = options != null ? options.Style : "",
                 AutoFocusFirstElement = options != null ? options.AutoFocusFirstElement : true,
                 CloseDialogOnOverlayClick = options != null ? options.CloseDialogOnOverlayClick : false,
+                CloseDialogOnEsc = options != null ? options.CloseDialogOnEsc : true,
             };
 
-            await JSRuntime.InvokeAsync<string>("Radzen.openDialog", dialogOptions);
+            await JSRuntime.InvokeAsync<string>("Radzen.openDialog", dialogOptions, Reference);
 
             return await OpenAsync(title, ds =>
             {
@@ -370,6 +387,12 @@ namespace Radzen
         /// </summary>
         /// <value><c>true</c> if closeable; otherwise, <c>false</c>.</value>
         public bool CloseDialogOnOverlayClick { get; set; } = false;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the dialog should be closed on ESC key press.
+        /// </summary>
+        /// <value><c>true</c> if closeable; otherwise, <c>false</c>.</value>
+        public bool CloseDialogOnEsc { get; set; } = true;
     }
 
     /// <summary>

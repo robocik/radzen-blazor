@@ -63,7 +63,7 @@ namespace Radzen.Blazor
 
         internal int GetColSpan(bool isDataCell = false)
         {
-            if (!Grid.AllowCompositeDataCells && isDataCell) 
+            if (!Grid.AllowCompositeDataCells && isDataCell)
                 return 1;
 
             var directChildColumns = Grid.childColumns.Where(c => c.Visible && c.Parent == this);
@@ -78,7 +78,7 @@ namespace Radzen.Blazor
 
         internal int GetRowSpan(bool isDataCell = false)
         {
-            if (!Grid.AllowCompositeDataCells && isDataCell) 
+            if (!Grid.AllowCompositeDataCells && isDataCell)
                 return 1;
 
             if (Columns == null && Parent != null)
@@ -108,7 +108,7 @@ namespace Radzen.Blazor
                         _filterPropertyType = PropertyAccess.GetPropertyType(typeof(TItem), property);
                     }
                 }
-            
+
                 if (_filterPropertyType == null)
                 {
                     _filterPropertyType = Type;
@@ -142,7 +142,7 @@ namespace Radzen.Blazor
         {
             get
             {
-                if (Grid != null && Grid.selectedColumns != null)
+                if (Grid != null && Grid.selectedColumns != null && Pickable)
                 {
                     return ((IEnumerable<object>)Grid.selectedColumns).Cast<RadzenDataGridColumn<TItem>>().Contains(this);
                 }
@@ -299,6 +299,13 @@ namespace Radzen.Blazor
         public bool Groupable { get; set; } = true;
 
         /// <summary>
+        /// Gets or sets a value indicating whether this <see cref="RadzenDataGridColumn{TItem}"/> is pickable - listed when DataGrid AllowColumnPicking is set to true.
+        /// </summary>
+        /// <value><c>true</c> if pickable; otherwise, <c>false</c>.</value>
+        [Parameter]
+        public bool Pickable { get; set; } = true;
+
+        /// <summary>
         /// Gets or sets the text align.
         /// </summary>
         /// <value>The text align.</value>
@@ -419,8 +426,9 @@ namespace Radzen.Blazor
 
             if (forCell && IsFrozen())
             {
-                var left = Grid.ColumnsCollection
-                    .TakeWhile((c, i) => Grid.ColumnsCollection.IndexOf(this) > i && c.IsFrozen())
+                var visibleColumns = Grid.ColumnsCollection.Where(c => c.Visible).ToList();
+                var left = visibleColumns
+                    .TakeWhile((c, i) => visibleColumns.IndexOf(this) > i && c.IsFrozen())
                     .Sum(c => {
                         var w = !string.IsNullOrEmpty(c.GetWidth()) ? c.GetWidth() : Grid.ColumnWidth;
                         var cw = 200;
@@ -560,7 +568,7 @@ namespace Radzen.Blazor
             if (parameters.DidParameterChange(nameof(FilterValue), FilterValue))
             {
                 filterValue = parameters.GetValueOrDefault<object>(nameof(FilterValue));
-                
+
                 if (FilterTemplate != null)
                 {
                     FilterValue = filterValue;
@@ -577,7 +585,7 @@ namespace Radzen.Blazor
                     {
                         await Grid.Reload();
                     }
-                    
+
                     return;
                 }
             }
@@ -651,6 +659,20 @@ namespace Radzen.Blazor
             {
                 secondFilterValue = value;
             }
+        }
+
+        internal void ClearFilters()
+        {
+            SetFilterValue(null);
+            SetFilterValue(null, false);
+            SetFilterOperator(null);
+            SetSecondFilterOperator(null);
+
+            FilterValue = null;
+            SecondFilterValue = null;
+            FilterOperator = default(FilterOperator);
+            SecondFilterOperator = default(FilterOperator);
+            LogicalFilterOperator = default(LogicalFilterOperator);
         }
 
         /// <summary>

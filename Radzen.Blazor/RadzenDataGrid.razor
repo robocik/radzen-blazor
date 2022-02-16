@@ -46,13 +46,13 @@
                 {
                     <div class="rz-column-picker">
                         <RadzenDropDown SelectAllText="All"
-                            MaxSelectedLabels="2"
-                            SelectedItemsText="@ColumnsShowingText" Change=@(args => StateHasChanged())
-                            @bind-Value="@selectedColumns"
-                            Multiple="true"
-                            Placeholder="Columns"
-                            Data="allColumns"
-                            TextProperty="Title" />
+                                        MaxSelectedLabels="2" 
+                                        SelectedItemsText="@ColumnsShowingText" Change=@(args => StateHasChanged())
+                                        @bind-Value="@selectedColumns" 
+                                        Multiple="true" 
+                                        Placeholder="Columns" 
+                                        Data="allPickableColumns" 
+                                        TextProperty="Title" />
                     </div>
                 }
             </div>
