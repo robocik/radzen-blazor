@@ -1953,5 +1953,8 @@ namespace Radzen.Blazor
         }
 
         internal int deepestChildColumnLevel;
+
+        [Parameter]
+        public string CssBody { get; set; }
     }
 }
